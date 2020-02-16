@@ -15,7 +15,7 @@ uint8_t logo_data_BIOS = 0xA8;
 bool logo_status; 
  
 int width, height;
-
+uint8_t logo_total = 0u;
 
 bool BIOS_SET::check_logo(char * BIOS_ROM, char * GAME_ROM)
 {
@@ -23,13 +23,15 @@ bool BIOS_SET::check_logo(char * BIOS_ROM, char * GAME_ROM)
         * Compare the rom on the bios with the logo data on the ACTUAL CARTRIDGE
         * if these match, then the value produced is TRUE
         */
-            
+
+   
     if (BIOS_ROM[logo_data_BIOS] == GAME_ROM[logo_data_CART])
     {
         for (int i = 0; i < 29; i++)
         {
             if (BIOS_ROM[logo_data_BIOS + i] == GAME_ROM[logo_data_CART + i])
             {
+                logo_total = GAME_ROM[logo_data_CART + i] + logo_total;
                 logo_status = true;
             }
             else
@@ -39,16 +41,15 @@ bool BIOS_SET::check_logo(char * BIOS_ROM, char * GAME_ROM)
             }
         }
 
+        logo_total = logo_total + 25;
+        printf("%d", logo_total);
         return logo_status;
     }
     else
     {
         return logo_status;
     }
-            
-
 }
-
       
 char * BIOS_SET::get_bios(string BIOSNAME)
 {
@@ -64,8 +65,8 @@ char * BIOS_SET::get_bios(string BIOSNAME)
     {
         printf("no file found!");
     }
-    return buffer;
 
+    return buffer;
 }
 
 char * BIOS_SET::get_rom(string ROMNAME)
@@ -86,6 +87,8 @@ char * BIOS_SET::get_rom(string ROMNAME)
     return buffer;
 }
 
+
+
 int main() 
 {
     BIOS_SET _BIOS;
@@ -94,9 +97,17 @@ int main()
     char * bios_file = _BIOS.get_bios("C://Users//zoepe//Downloads//dmg_boot.bin");
     _BIOS.t.BIOS_GRAPHIC = bios_file;
     bool x = _BIOS.check_logo(rom_file, _BIOS.t.BIOS_GRAPHIC);
+
     cout << "result: " << x ? "true" : "false";
     
-    GB_interpretOpcode(0xa5);
+    if (logo_status == true)
+    {
+        GB_interpretOpcode(0xc3);
+    }
+    else
+    {
+        return -1;
+    }
 
     return 0;
 }

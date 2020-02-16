@@ -15,6 +15,7 @@ class BIOS_SET
 
 		char* get_rom(std::string ROMNAME);
 
+		void startup_sequence();
 };
 
 #endif

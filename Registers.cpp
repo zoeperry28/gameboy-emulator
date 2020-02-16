@@ -9,6 +9,7 @@ string current_bin = "";
 uint8_t OP = 0u; 
 
 
+
 std::string GBA_ConvertHextoBin(uint8_t hexa)
 {
     int bits = 0u;
