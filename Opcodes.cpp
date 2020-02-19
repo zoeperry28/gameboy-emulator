@@ -2,6 +2,8 @@
 #include "Registers.h"
 #include <iostream>
 Registers::CPUREG* R = new Registers::CPUREG;
+uint8_t n;
+uint16_t nn;
 unsigned int temp;
 static bool REGISTERS_INIT = false; 
 void GB_INITIALIZE_REGS()
@@ -22,6 +24,27 @@ void GB_JMP_Condition_NN(uint8_t FLAG, int SET_CHECK)
     }
 }
 
+void GB_LD_nn_n(uint8_t LD_nn)
+{
+    R->PC++;
+    R->PC = LD_nn;
+}
+
+void GB_LD_r1_r2(uint8_t R1, uint8_t R2)
+{
+    R1 = R2; 
+}
+
+void GB_LD_A_n(uint8_t n)
+{
+    R->AF.A = n; 
+}
+
+void GB_LD_n_A(uint8_t n)
+{
+    n = R->AF.A;
+}
+
 void GB_JMP_Condition(uint8_t FLAG, int SET_CHECK)
 {
     if (FLAG == SET_CHECK)
@@ -33,7 +56,7 @@ void GB_JMP_Condition(uint8_t FLAG, int SET_CHECK)
 
 uint16_t GB_GET_nn()
 {
-    uint16_t nn;
+    
     uint8_t lsb = R->PC++;
     printf("\nLSB: %x", lsb);
     uint8_t msb = R->PC++;
@@ -43,8 +66,7 @@ uint16_t GB_GET_nn()
 }
 
 uint8_t GB_GET_n()
-{
-    uint8_t n; 
+{   
     n = R->PC++;
     return n;
 }
