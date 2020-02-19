@@ -84,15 +84,18 @@ char * BIOS_SET::get_rom(string ROMNAME)
     {
         printf("no file found!");
     }
+
+    for (int i = 0; i < 10; i++)
+    {
+        printf("\n%x ", buffer[logo_data_BIOS + i]);
+    }
     return buffer;
 }
-
-
 
 int main() 
 {
     BIOS_SET _BIOS;
-    
+    int i = 0;
     char* rom_file = _BIOS.get_rom("C://Users//zoepe//Downloads//tetris.bin");
     char * bios_file = _BIOS.get_bios("C://Users//zoepe//Downloads//dmg_boot.bin");
     _BIOS.t.BIOS_GRAPHIC = bios_file;
@@ -102,7 +105,9 @@ int main()
     
     if (logo_status == true)
     {
-        GB_interpretOpcode(0xc3);
+        GB_interpretOpcode(0x0);
+        GB_interpretOpcode(0x0);
+
     }
     else
     {

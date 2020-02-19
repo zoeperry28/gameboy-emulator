@@ -2,10 +2,17 @@
 #define __OPCODES_H__
 
 #include <stdint.h>
+
+uint16_t GB_GET_nn();
+uint8_t GB_GET_n();
+
 class Opcodes
 {
 	public :
+		void GB_INITIALIZE_REGS();
 		void GB_interpretOpcode(uint8_t opcode);
+	private: 
+		
 };
 
 #endif

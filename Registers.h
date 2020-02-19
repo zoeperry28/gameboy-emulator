@@ -6,7 +6,7 @@
 std::string GBA_ConvertHextoBin(uint8_t hexa);
 void GB_interpretOpcode(uint8_t opcode); 
 uint8_t GBA_BinToHex(std::string binary);
-
+ 
 class Registers
 {
 	public : 
