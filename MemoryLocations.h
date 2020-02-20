@@ -2,6 +2,7 @@
 #define _MEMORYLOCATIONS_H_
 
 #include <stdint.h>
+
 struct myTest {
 
 	uint8_t RST00 : 8; //0000
@@ -18,7 +19,7 @@ struct myTest {
 	uint8_t SerialTransfer_Start : 2; //0058 
 	uint8_t HTL_Start : 8; //0060
 	uint8_t BEGIN_CODE : 3; //0100 - 0103
-	char *  BIOS_GRAPHIC; //0104 - 0133 This is where the nintendo graphic is placed
+	char* BIOS_GRAPHIC; //0104 - 0133 This is where the nintendo graphic is placed
 	uint8_t GAME_TITLE : 8; //0134 - 0142
 	uint8_t GAMEBOY_COL : 1; // 0143
 	uint8_t LIC_CODE_HIGH : 1; //0144
@@ -33,6 +34,7 @@ struct myTest {
 	uint8_t COMPLEMENT_C : 1; //014D
 	uint8_t CHECKSUM : 1;
 
+	uint8_t ROM_EXE[800];
 };
 
 #endif

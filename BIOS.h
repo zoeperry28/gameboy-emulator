@@ -3,11 +3,14 @@
 
 #include <string>
 #include "MemoryLocations.h"
+
+uint8_t * MEMORY_MAP ; 
+myTest t;
 class BIOS_SET
 {
     public:
 
-		myTest t;
+		
 
 		bool check_logo(char* BIOS_ROM, char* GAME_ROM);
 

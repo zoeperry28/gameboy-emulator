@@ -17,6 +17,7 @@ bool logo_status;
  
 int width, height;
 uint8_t logo_total = 0u;
+myTest MEMORY_DEF;
 
 bool BIOS_SET::check_logo(char * BIOS_ROM, char * GAME_ROM)
 {
@@ -113,29 +114,39 @@ char * BIOS_SET::get_rom(string ROMNAME)
 int main() 
 {
     BIOS_SET _BIOS;
-    int i = 0;
+    int j = 0;
     char*  rom_file = _BIOS.get_rom("C://Users//zoepe//Downloads//tetris.bin");
     char * bios_file = _BIOS.get_bios("C://Users//zoepe//Downloads//dmg_boot.bin");
-    _BIOS.t.BIOS_GRAPHIC = bios_file;
-    bool x = _BIOS.check_logo(rom_file, _BIOS.t.BIOS_GRAPHIC);
+    t.BIOS_GRAPHIC = bios_file;
+    bool x = _BIOS.check_logo(rom_file, t.BIOS_GRAPHIC);
     cout << "result: " << x ? "true" : "false";
     
+    MEMORY_MAP = (uint8_t *) rom_file;
     bool start = false; 
-    while (true)
+        
+     
+    for (int i = 0; i < sizeof(t.ROM_EXE); i++)
+    {
+        t.ROM_EXE[i] = MEMORY_MAP[i];
+    }
+    ofstream myFile("data.bin", ios::out | ios::binary);
+    myFile.write((char *)t.ROM_EXE, sizeof(t.ROM_EXE));
+    
+    while (1)
     {
         if (start == false)
         {
             GB_interpretOpcode(0xff);
             start = true;
         }
-        else
+       else
         {
-            GB_interpretOpcode((uint8_t)rom_file[i]);
+            GB_interpretOpcode(t.ROM_EXE[j]);
             Sleep(5000);
-            i++;
+            j++;
         }
     }
-
+ 
     return 0;
 }
 
