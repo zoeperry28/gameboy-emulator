@@ -1,5 +1,19 @@
+#pragma once
+
 #ifndef _MEMORYLOCATIONS_H_ 
 #define _MEMORYLOCATIONS_H_
+
+#define VIDEO_RAM			0x8000	- 0x8000
+#define SWITCH_RAM_BNK		0xA000	- 0x8000
+#define INTERNAL_RAM		0xC000	- 0x8000
+#define INTERNAL_RAM_ECHO	0xC000	- 0x8000
+#define SPRITE_MEM_OAM		0xC000	- 0x8000
+#define IO_PORT_START		0xff00	- 0x8000
+#define IO_PORT_END			0xff4c	- 0x8000
+#define INTERNAL_RAM		0xFF80	- 0x8000
+#define INTERRUPT_ENABLE	0xFFFF	- 0x8000
+#define START_OF_STACK		0xC000	- 0x8000
+#define END_OF_STACK		0xDFFF	- 0x8000
 
 #include <stdint.h>
 
@@ -35,6 +49,8 @@ struct myTest {
 	uint8_t CHECKSUM : 1;
 
 	uint8_t ROM_EXE[800];
+
+	uint8_t NONCART[0x7fff];
 };
 
 #endif
