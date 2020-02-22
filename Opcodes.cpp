@@ -66,7 +66,7 @@ void GB_JMP_Condition(uint8_t FLAG, uint8_t SET_CHECK)
     if (FLAG == SET_CHECK)
     {
         temp = R->PC;
-        R->PC =+ temp;
+        R->PC =+ temp + 1;
     }
 
     R->PC++;
@@ -129,13 +129,23 @@ void GB_CP_n(uint8_t n)
     {
         R->FLAG.Z = 1; 
     }
-    if (R->AF.A < n)
+    if (temp < n)
     {
         R->FLAG.C = 1;
     }
-
+    printf("\nZ = %x", R->FLAG.Z);
+    printf("\nN = %x", R->FLAG.N);
+    printf("\nH = %x", R->FLAG.H);
+    printf("\nC = %x", R->FLAG.C);
     R->PC++;
 }
+void GB_XOR_n(uint8_t n)
+{
+    R->AF.A = R->AF.A ^ n;
+    R->PC++;
+}
+
+
 
 // ------ ALU ------
 
@@ -152,7 +162,7 @@ void GB_RST_n(uint8_t n)
     GBA_Set_Stack_ITEM((R->PC & 0xFF), (R->SP - 2));
     R->SP = R->SP -= 2;
     std::cout << "STACK POINTER: " << R->SP;
-    R->PC++;   
+    R->PC+=2;   
 }
 
 void GB_POP_nn(uint8_t REG1, uint8_t REG2)
@@ -218,7 +228,20 @@ void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
     }
 }
 
-
+void GB_RET_cc(uint8_t FLAG, uint8_t SET_CHECK)
+{
+    if (FLAG == SET_CHECK)
+    {
+        
+    }
+    R->PC++;
+}
+//case 0xF0: GB_LD_A_n((0xFF00 + GB_GET_n())); break;
+void GB_LDH_A_n(uint8_t n)
+{
+    MEMORY_STATUS[0xFF00 + n] = R->AF.A;
+    R->PC++;
+}
 
 /*
  * Theres not really an elegant way to do this... 
@@ -337,11 +360,11 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0xEA: GB_LD_n_A(GB_GET_nn()); break;
 
         //LDH A, n
-        case 0xF0: GB_LD_A_n((0xFF00 + GB_GET_n())); break;
+        case 0xF0:GB_LDH_A_n(GB_GET_n()); break;
         // JUMPS
         case 0xC3:GB_JP_nn(opcode); break;
 
-        case 0xC2:GB_JMP_Condition_NN(R->FLAG.Z, 0); break; 
+        case 0xC2:GB_JMP_Condition_NN(R->FLAG.Z, 1); break; 
         case 0xCA:GB_JMP_Condition_NN(R->FLAG.Z, 1); break; 
         case 0xD2:GB_JMP_Condition_NN(R->FLAG.C, 0); break;
         case 0xDA:GB_JMP_Condition_NN(R->FLAG.C, 1); break;
@@ -349,12 +372,14 @@ void GB_interpretOpcode(uint8_t opcode)
        // case 0xE9: R->PC = R->HL.PAIR; break;
         case 0xE9: R->PC++; break;
 
-        case 0x18:  temp = R->PC; 
-                    temp =+ R->PC++; break; 
-        case 0x20: GB_JMP_Condition(R->FLAG.Z, 0); break;
+        case 0x18: // temp = R->PC; 
+                   // temp =+ R->PC++; 
+                    R->PC += 2;
+                    break;
+        case 0x20: GB_JMP_Condition(R->FLAG.Z, 1); break;
         case 0x28: GB_JMP_Condition(R->FLAG.Z, 1); break;
-        case 0x30: GB_JMP_Condition(R->FLAG.C, 0); break;
-        case 0x38: GB_JMP_Condition(R->FLAG.C, 1); break;
+        case 0x30: GB_JMP_Condition(R->FLAG.C, 1); break;
+        case 0x38: GB_JMP_Condition(R->FLAG.C, 0); break;
         
         //16 Bit Loads
 
@@ -370,6 +395,16 @@ void GB_interpretOpcode(uint8_t opcode)
 
         //8 BIT ARITHMETIC
         
+        // XOR n 
+        case 0xAf:GB_XOR_n(R->AF.A); break;
+        case 0xA8:GB_XOR_n(R->BC.B); break;
+        case 0xA9:GB_XOR_n(R->BC.C); break;
+        case 0xAa:GB_XOR_n(R->DE.D); break;
+        case 0xAb:GB_XOR_n(R->DE.E); break;
+        case 0xAc:GB_XOR_n(R->HL.H); break;
+        case 0xAd:GB_XOR_n(R->HL.L); break;
+        case 0xAe:GB_XOR_n(R->HL.PAIR); break;
+
          //ADD A,n
         case 0x87: GB_ADD_A_n(R->AF.A); break;
         case 0x80: GB_ADD_A_n(R->BC.B); break;
@@ -485,6 +520,13 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0xcd: GB_CALL_nn(); break;
 
         //RETURNS
+        //RET
+        case 0xC9: R->PC++; break;
+        //RET CC
+        case 0xC0:GB_RET_cc(R->FLAG.Z, 0);  break;
+        case 0xC8:GB_RET_cc(R->FLAG.Z, 1); break;
+        case 0xD0:GB_RET_cc(R->FLAG.C, 0); break;
+        case 0xD8:GB_RET_cc(R->FLAG.C, 1); break;
         //RETI
         case 0xD9: 
             lsb = GBA_Get_Stack_ITEM(R->SP);
@@ -493,6 +535,8 @@ void GB_interpretOpcode(uint8_t opcode)
             R->PC++;
             break;
 
+        //INTERRUPTS - might not be here for long but u kno 
+        case 0xFB: MEMORY_STATUS[0xFFFF] = 1; R->PC++;  break;
         default: 
             printf("\n################# UNIMPLEMENTED OPCODE : %x #################", opcode);
             exit(-1);
