@@ -229,13 +229,14 @@ void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
     GB_INIT_STACK(); 
     R->PC = 0x0;
     R->SP = 0xFFFE;
+    draw(argc, argv);
     while (1)
     {
         std::cout << "\nCURRENT PC ISSSSS ....... " << (uint32_t) R->PC;
         MEMORY_STATUS = MEMORY_MAP;
         GB_interpretOpcode(MEMORY_STATUS[R->PC]);
        // Sleep(1000);
-        draw(argc, argv);
+        
     }
 }
 

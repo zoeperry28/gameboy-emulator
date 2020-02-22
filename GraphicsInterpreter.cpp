@@ -60,23 +60,13 @@ int draw(int argc, char** argv)
 
     SDL_Event event;
     bool running = true;
-    while (running)
-    {
+
         const Uint64 start = SDL_GetPerformanceCounter();
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
 
-        while (SDL_PollEvent(&event))
-        {
-            if ((SDL_QUIT == event.type) ||
-                (SDL_KEYDOWN == event.type && SDL_SCANCODE_ESCAPE == event.key.keysym.scancode))
-            {
-                running = false;
-                break;
-            }
-        }
-
+    
     std::string myBIN;
 
     SDL_Rect rect;
@@ -130,7 +120,7 @@ int draw(int argc, char** argv)
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
 
-    }
+
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
