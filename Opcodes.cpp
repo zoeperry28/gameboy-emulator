@@ -10,7 +10,7 @@ uint16_t nn;
 uint8_t* MEMORY_STATUS;
 unsigned int temp;
 static bool REGISTERS_INIT = false; 
-
+uint8_t lsb, msb;
 
 uint8_t GB_JP_nn(uint8_t nn)
 {
@@ -41,11 +41,13 @@ void GB_LD_nn_n(uint8_t LD_nn)
 {
     R->PC++;
     MEMORY_STATUS[R->PC] = LD_nn;
+    R->PC++;
 }
 
 void GB_LD_r1_r2(uint8_t R1, uint8_t R2)
 {
     R1 = R2; 
+    R->PC++;
 }
 
 void GB_LD_A_n(uint8_t n)
@@ -56,23 +58,27 @@ void GB_LD_A_n(uint8_t n)
 void GB_LD_n_A(uint8_t n)
 {
     n = R->AF.A;
+    R->PC++;
 }
 
-void GB_JMP_Condition(uint8_t FLAG, int SET_CHECK)
+void GB_JMP_Condition(uint8_t FLAG, uint8_t SET_CHECK)
 {
     if (FLAG == SET_CHECK)
     {
         temp = R->PC;
         R->PC =+ temp;
     }
+
+    R->PC++;
 }
 
 uint16_t GB_GET_nn()
 {   
     R->PC++;
-    uint8_t lsb = MEMORY_STATUS[R->PC++];
+    uint8_t lsb = MEMORY_STATUS[R->PC];
     std::cout << "\nLSB: " << lsb;
-    uint8_t msb = MEMORY_STATUS[R->PC++];
+    R->PC++;
+    uint8_t msb = MEMORY_STATUS[R->PC];
     std::cout << "\nMSB: " << msb;
     nn = lsb + msb;
     std::cout << "\nNN: " << nn;
@@ -154,6 +160,47 @@ void GB_POP_nn(uint8_t REG1, uint8_t REG2)
     REG2 = GBA_Get_Stack_ITEM(R->SP);
     REG1 = GBA_Get_Stack_ITEM(R->SP + 1);
     R->SP += 2;
+    R->PC++;
+
+}
+
+void GB_PUSH_nn(uint8_t REG1, uint8_t REG2)
+{
+    GBA_Set_Stack_ITEM((R->SP - 2), REG2);
+    GBA_Set_Stack_ITEM((R->SP - 1) , REG1);
+    R->SP = R->SP - 2;
+    R->PC++;
+}
+
+void GB_AND_n(uint8_t n)
+{
+    R->AF.A = R->AF.A && n;
+    R->PC++;
+}
+
+void GB_CALL_nn()
+{
+    lsb = MEMORY_STATUS[R->PC];
+    R->PC++;
+    printf("well.......%x", lsb);
+    msb = MEMORY_STATUS[R->PC];
+    R->PC++;
+    printf("well.......%x", msb);
+    //writeMem(SP - 1, ((PC & 0xFF00) >> 8), gbcpu.mem);
+
+    //writeMem(SP - 2, (PC & 0xFF), gbcpu.mem);
+
+    GBA_Set_Stack_ITEM((R->SP - 2), (MEMORY_STATUS[R->PC] & 0xFF));
+    GBA_Set_Stack_ITEM((R->SP - 1), (MEMORY_STATUS[R->PC] & 0xFF00 >> 8));
+
+    //SP -= 2;
+    R->SP = R->SP - 2;
+    //PC = opAux.Word;
+    R->PC++;
+
+    std::cout << "HELLOOOOOOOOOOO : " << R->PC;
+
+    //break;
 
 }
 
@@ -167,9 +214,11 @@ void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
         std::cout << "\nCURRENT PC ISSSSS ....... " << (uint32_t) R->PC;
         MEMORY_STATUS = MEMORY_MAP;
         GB_interpretOpcode(MEMORY_STATUS[R->PC]);
-        Sleep(1000);
+       // Sleep(1000);
     }
 }
+
+
 
 /*
  * Theres not really an elegant way to do this... 
@@ -192,6 +241,7 @@ void GB_interpretOpcode(uint8_t opcode)
         {
         //8 BIT LOADS
 
+        case 0xE0: MEMORY_STATUS[0xFF00 + GB_GET_n()] = R->AF.A; R->PC++;  break;
         // LD nn, n
         case 0x06:GB_LD_nn_n(R->BC.B); break; 
         case 0x0E:GB_LD_nn_n(R->BC.C); break;
@@ -286,6 +336,8 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0x77: GB_LD_n_A(R->HL.PAIR); break;
         case 0xEA: GB_LD_n_A(GB_GET_nn()); break;
 
+        //LDH A, n
+        case 0xF0: GB_LD_A_n((0xFF00 + GB_GET_n())); break;
         // JUMPS
         case 0xC3:GB_JP_nn(opcode); break;
 
@@ -293,7 +345,10 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0xCA:GB_JMP_Condition_NN(R->FLAG.Z, 1); break; 
         case 0xD2:GB_JMP_Condition_NN(R->FLAG.C, 0); break;
         case 0xDA:GB_JMP_Condition_NN(R->FLAG.C, 1); break;
-        case 0xE9: R->PC = R->HL.PAIR;break;
+
+       // case 0xE9: R->PC = R->HL.PAIR; break;
+        case 0xE9: R->PC++; break;
+
         case 0x18:  temp = R->PC; 
                     temp =+ R->PC++; break; 
         case 0x20: GB_JMP_Condition(R->FLAG.Z, 0); break;
@@ -303,10 +358,15 @@ void GB_interpretOpcode(uint8_t opcode)
         
         //16 Bit Loads
 
-        case 0xF1: GB_POP_nn(R->AF.A, R->AF.F);
-        case 0xC1: GB_POP_nn(R->BC.B, R->BC.C);
-        case 0xD1: GB_POP_nn(R->DE.D, R->DE.E);
-        case 0xE1: GB_POP_nn(R->HL.H, R->HL.L);
+        case 0xF1: GB_POP_nn(R->AF.A, R->AF.F);break;
+        case 0xC1: GB_POP_nn(R->BC.B, R->BC.C);break;
+        case 0xD1: GB_POP_nn(R->DE.D, R->DE.E);break;
+        case 0xE1: GB_POP_nn(R->HL.H, R->HL.L);break;
+
+        case 0xF5: GB_PUSH_nn(R->AF.A, R->AF.F);break;
+        case 0xC5: GB_PUSH_nn(R->BC.B, R->BC.C);break;
+        case 0xD5: GB_PUSH_nn(R->DE.D, R->DE.E);break;
+        case 0xE5: GB_PUSH_nn(R->HL.H, R->HL.L);break;
 
         //8 BIT ARITHMETIC
         
@@ -343,14 +403,14 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0x96: GB_SUB_n(R->HL.PAIR); break;
 
         //SBC A,n
-        case 0x9f: GB_SBC_n(R->AF.A); break;
-        case 0x98: GB_SBC_n(R->BC.B); break;
-        case 0x99: GB_SBC_n(R->BC.C); break;
-        case 0x9a: GB_SBC_n(R->DE.D); break;
-        case 0x9b: GB_SBC_n(R->DE.E); break;
-        case 0x9c: GB_SBC_n(R->HL.H); break;
-        case 0x9d: GB_SBC_n(R->HL.L); break;
-        case 0x9e: GB_SBC_n(R->HL.PAIR); break;
+        case 0x9f: GB_SBC_n(R->AF.A); R->PC++; break;
+        case 0x98: GB_SBC_n(R->BC.B); R->PC++; break;
+        case 0x99: GB_SBC_n(R->BC.C); R->PC++; break;
+        case 0x9a: GB_SBC_n(R->DE.D); R->PC++; break;
+        case 0x9b: GB_SBC_n(R->DE.E); R->PC++; break;
+        case 0x9c: GB_SBC_n(R->HL.H); R->PC++; break;
+        case 0x9d: GB_SBC_n(R->HL.L); R->PC++; break;
+        case 0x9e: GB_SBC_n(R->HL.PAIR); R->PC++; break;
 
         //CP n 
         case 0xBf: GB_CP_n(R->AF.A); break;
@@ -361,8 +421,20 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0xBc: GB_CP_n(R->HL.H); break;
         case 0xBd: GB_CP_n(R->HL.L); break;
         case 0xBe: GB_CP_n(R->HL.PAIR); break;
+        case 0xFe: GB_CP_n(R->MISC.HASH); R->PC++; break;
 
-        // 16 BIT ARTHMETIC
+        //GB_AND_n
+        case 0xA7: GB_AND_n(R->AF.A); break;
+        case 0xA0: GB_AND_n(R->BC.B); break;
+        case 0xA1: GB_AND_n(R->BC.C); break;
+        case 0xA2: GB_AND_n(R->DE.D); break;
+        case 0xA3: GB_AND_n(R->DE.E); break;
+        case 0xA4: GB_AND_n(R->HL.H); break;
+        case 0xA5: GB_AND_n(R->HL.L); break;
+        case 0xA6: GB_AND_n(R->HL.PAIR); break;
+            
+            
+          // 16 BIT ARTHMETIC
         case 0x00: 
             std::cout << "\nPC BEFORE NOP:" << R->PC;
             if (R->PC != 0)
@@ -372,19 +444,19 @@ void GB_interpretOpcode(uint8_t opcode)
             std::cout << "\nPC AFTER NOP:" << R->PC;
             break;
             // ADD HL, N
-        case 0x09: R->HL.PAIR = R->BC.PAIR + R->HL.PAIR; break;
-        case 0x19: R->HL.PAIR = R->DE.PAIR + R->HL.PAIR; break;
-        case 0x29: R->HL.PAIR = R->HL.PAIR + R->HL.PAIR; break;
-        case 0x39: R->HL.PAIR = R->SP + R->HL.PAIR; break;
+        case 0x09: R->HL.PAIR = R->BC.PAIR + R->HL.PAIR; R->PC++; break;
+        case 0x19: R->HL.PAIR = R->DE.PAIR + R->HL.PAIR; R->PC++;  break;
+        case 0x29: R->HL.PAIR = R->HL.PAIR + R->HL.PAIR; R->PC++; break;
+        case 0x39: R->HL.PAIR = R->SP + R->HL.PAIR; R->PC++; break;
             //ADD SP,n
         case 0xE8:
             //TODO
             break;
             //INC nn
-        case 0x03: R->BC.PAIR++; break;
-        case 0x13: R->DE.PAIR++; break;
-        case 0x23: R->HL.PAIR++; break;
-        case 0x33: R->SP++; break;
+        case 0x03: R->BC.PAIR++; R->PC++; break;
+        case 0x13: R->DE.PAIR++; R->PC++; break;
+        case 0x23: R->HL.PAIR++; R->PC++; break;
+        case 0x33: R->SP++; R->PC ++;  break;
             //DEC nn
         case 0x0B: R->BC.PAIR--; break;
         case 0x1B: R->DE.PAIR--; break;
@@ -407,6 +479,19 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0xef: GB_RST_n(0x28); break;
         case 0xf7: GB_RST_n(0x30); break;
         case 0xff: GB_RST_n(0x38); break;
+        
+        //CALLS
+        // CALL nn 
+        case 0xcd: GB_CALL_nn(); break;
+
+        //RETURNS
+        //RETI
+        case 0xD9: 
+            lsb = GBA_Get_Stack_ITEM(R->SP);
+            msb = GBA_Get_Stack_ITEM(R->SP + 1);
+            GB_JP_nn(lsb + msb);
+            R->PC++;
+            break;
 
         default: 
             printf("\n################# UNIMPLEMENTED OPCODE : %x #################", opcode);

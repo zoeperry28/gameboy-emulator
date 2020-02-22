@@ -73,6 +73,11 @@ class Registers
 
 			union
 			{
+				uint8_t HASH; 
+			} MISC;
+
+			union
+			{
 				uint8_t Z : 1;
 				uint8_t N : 1;
 				uint8_t H : 1;
