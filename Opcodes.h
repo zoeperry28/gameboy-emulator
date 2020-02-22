@@ -5,6 +5,8 @@
 
 uint16_t GB_GET_nn();
 uint8_t GB_GET_n();
+void init(void);
+void draw(void);
 void GB_retrieveOpcodes(uint8_t* MEMORY_MAP);
 class Opcodes
 {

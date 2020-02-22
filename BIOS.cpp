@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "GraphicsInterpreter.h"
 using namespace std;
 
 
@@ -131,6 +132,9 @@ int main()
         t.ROM_EXE[i] = MEMORY_MAP[i];
     }
     
+    
+
+
     while (1)
     {
         if (start == false)

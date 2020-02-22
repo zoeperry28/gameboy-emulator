@@ -3,9 +3,12 @@
 #include <iostream>
 #include <Windows.h>
 #include "MemoryLocations.h"
+#include "GraphicsInterpreter.h"
 
 Registers::CPUREG* R = new Registers::CPUREG;
 uint8_t n;
+int argc ;
+char** argv ;
 uint16_t nn;
 uint8_t* MEMORY_STATUS;
 unsigned int temp;
@@ -214,6 +217,13 @@ void GB_CALL_nn()
 
 }
 
+
+void ex(int &argc, char** argv)
+{
+    
+}
+
+
 void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
 {
     GB_INIT_STACK(); 
@@ -225,6 +235,7 @@ void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
         MEMORY_STATUS = MEMORY_MAP;
         GB_interpretOpcode(MEMORY_STATUS[R->PC]);
        // Sleep(1000);
+        draw(argc, argv);
     }
 }
 
@@ -537,6 +548,14 @@ void GB_interpretOpcode(uint8_t opcode)
 
         //INTERRUPTS - might not be here for long but u kno 
         case 0xFB: MEMORY_STATUS[0xFFFF] = 1; R->PC++;  break;
+
+        case 0xCE:
+
+            std::cout << "\n";
+           
+            ex(argc, argv);
+            exit(22);
+            break;
         default: 
             printf("\n################# UNIMPLEMENTED OPCODE : %x #################", opcode);
             exit(-1);
