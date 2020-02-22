@@ -3,19 +3,24 @@
 #ifndef _MEMORYLOCATIONS_H_ 
 #define _MEMORYLOCATIONS_H_
 
-#define VIDEO_RAM			0x8000	- 0x8000
-#define SWITCH_RAM_BNK		0xA000	- 0x8000
-#define INTERNAL_RAM		0xC000	- 0x8000
-#define INTERNAL_RAM_ECHO	0xC000	- 0x8000
-#define SPRITE_MEM_OAM		0xC000	- 0x8000
-#define IO_PORT_START		0xff00	- 0x8000
-#define IO_PORT_END			0xff4c	- 0x8000
-#define INTERNAL_RAM		0xFF80	- 0x8000
-#define INTERRUPT_ENABLE	0xFFFF	- 0x8000
-#define START_OF_STACK		0xC000	- 0x8000
-#define END_OF_STACK		0xDFFF	- 0x8000
+constexpr auto VIDEO_RAM = 0x8000	- 0x8000;
+constexpr auto SWITCH_RAM_BNK		=	0xA000	- 0x8000;
+constexpr auto INTERNAL_RAM			=	0xC000	- 0x8000;
+constexpr auto INTERNAL_RAM_ECHO	=	0xC000	- 0x8000;
+constexpr auto SPRITE_MEM_OAM		=	0xC000	- 0x8000;
+constexpr auto IO_PORT_START		=	0xff00	- 0x8000;
+constexpr auto IO_PORT_END			=	0xff4c	- 0x8000;
+constexpr auto START_OF_INTERNAL_RAM=	0xFF80	- 0x8000;
+constexpr auto END_OF_INTERNAL_RAM	=	0xFFFE	- 0x8000;
+constexpr auto INTERRUPT_ENABLE		=	0xFFFF	- 0x8000;
 
 #include <stdint.h>
+
+void GB_INIT_STACK(); 
+uint8_t* GBA_Get_Stack();
+uint8_t* GBA_Set_Stack();
+uint8_t GBA_Get_Stack_ITEM(int loc);
+void GBA_Set_Stack_ITEM(int value, int loc);
 
 struct myTest {
 
@@ -48,9 +53,9 @@ struct myTest {
 	uint8_t COMPLEMENT_C : 1; //014D
 	uint8_t CHECKSUM : 1;
 
-	uint8_t ROM_EXE[800];
+	uint8_t ROM_EXE[8000];
 
-	uint8_t NONCART[0x7fff];
+	uint8_t NONCART[0xffff];
 };
 
 #endif

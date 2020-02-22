@@ -2,6 +2,7 @@
 #include "Registers.h"
 #include <iostream>
 #include <Windows.h>
+#include "MemoryLocations.h"
 
 Registers::CPUREG* R = new Registers::CPUREG;
 uint8_t n;
@@ -89,6 +90,7 @@ uint8_t GB_GET_n()
 void GB_ADD_A_n(uint8_t n)
 {
     R->AF.A = R->AF.A + n;
+    R->PC++;
 }
 
 void GB_ADC_A_n(uint8_t n)
@@ -131,16 +133,41 @@ void GB_CP_n(uint8_t n)
 
 // ------ ALU ------
 
+//RST n
+/* Description:
+    Push present address onto stack.
+        Jump to address $0000 + n.
+        Use with :
+    n = $00, $08, $10, $18, $20, $28, $30, $38 */
+
+void GB_RST_n(uint8_t n)
+{
+    GBA_Set_Stack_ITEM(((R->PC & 0xFF00) >> 8), (R->SP - 1));
+    GBA_Set_Stack_ITEM((R->PC & 0xFF), (R->SP - 2));
+    R->SP = R->SP -= 2;
+    std::cout << "STACK POINTER: " << R->SP;
+    R->PC++;   
+}
+
+void GB_POP_nn(uint8_t REG1, uint8_t REG2)
+{
+    REG2 = GBA_Get_Stack_ITEM(R->SP);
+    REG1 = GBA_Get_Stack_ITEM(R->SP + 1);
+    R->SP += 2;
+
+}
+
 void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
 {
+    GB_INIT_STACK(); 
     R->PC = 0x0;
-    std::cout << "I GOT THIS ONE: " << MEMORY_MAP[R->PC];
-    std::cout << "I GOT THIS ONE: " << MEMORY_MAP[R->PC+1];
+    R->SP = 0xFFFE;
     while (1)
     {
+        std::cout << "\nCURRENT PC ISSSSS ....... " << (uint32_t) R->PC;
         MEMORY_STATUS = MEMORY_MAP;
         GB_interpretOpcode(MEMORY_STATUS[R->PC]);
-        Sleep(5000);
+        Sleep(1000);
     }
 }
 
@@ -276,6 +303,10 @@ void GB_interpretOpcode(uint8_t opcode)
         
         //16 Bit Loads
 
+        case 0xF1: GB_POP_nn(R->AF.A, R->AF.F);
+        case 0xC1: GB_POP_nn(R->BC.B, R->BC.C);
+        case 0xD1: GB_POP_nn(R->DE.D, R->DE.E);
+        case 0xE1: GB_POP_nn(R->HL.H, R->HL.L);
 
         //8 BIT ARITHMETIC
         
@@ -360,7 +391,26 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0x2B: R->HL.PAIR--; break;
         case 0x3B: R->SP--; break;
 
-            
+        //RESTARTS
+        //RST n
+        /* Description:
+            Push present address onto stack.
+                Jump to address $0000 + n.
+                Use with :
+            n = $00, $08, $10, $18, $20, $28, $30, $38 */ 
+
+        case 0xC7: GB_RST_n(0x00); break;
+        case 0xCf: GB_RST_n(0x08); break;
+        case 0xd7: GB_RST_n(0x10); break;
+        case 0xdf: GB_RST_n(0x18); break;
+        case 0xe7: GB_RST_n(0x20); break;
+        case 0xef: GB_RST_n(0x28); break;
+        case 0xf7: GB_RST_n(0x30); break;
+        case 0xff: GB_RST_n(0x38); break;
+
+        default: 
+            printf("\n################# UNIMPLEMENTED OPCODE : %x #################", opcode);
+            exit(-1);
         }
     }
 }
