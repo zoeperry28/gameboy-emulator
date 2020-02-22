@@ -1,6 +1,7 @@
 #include "BIOS.h"
 #include "Registers.h"
 #include "MemoryLocations.h"
+#include "Opcodes.h"
 // classes example
 #include <Windows.h>
 #include <iostream>
@@ -129,8 +130,6 @@ int main()
     {
         t.ROM_EXE[i] = MEMORY_MAP[i];
     }
-    ofstream myFile("data.bin", ios::out | ios::binary);
-    myFile.write((char *)t.ROM_EXE, sizeof(t.ROM_EXE));
     
     while (1)
     {
@@ -141,7 +140,7 @@ int main()
         }
        else
         {
-            GB_interpretOpcode(t.ROM_EXE[j]);
+            GB_retrieveOpcodes((uint8_t *) t.ROM_EXE);
             Sleep(5000);
             j++;
         }
