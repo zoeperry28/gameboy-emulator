@@ -3,10 +3,10 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 #include <memory>
-
+#include "MemoryLocations.h"
 
 int draw(int argc, char** argv);
-
+void helper(uint8_t * MEMORY_STATUS, uint8_t DECODING []);
 class Application
 {
 public:

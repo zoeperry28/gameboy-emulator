@@ -3,7 +3,7 @@
 #ifndef _MEMORYLOCATIONS_H_ 
 #define _MEMORYLOCATIONS_H_
 
-constexpr auto VIDEO_RAM = 0x8000	- 0x8000;
+constexpr auto VIDEO_RAM			= 0x8000	- 0x8000;
 constexpr auto SWITCH_RAM_BNK		=	0xA000	- 0x8000;
 constexpr auto INTERNAL_RAM			=	0xC000	- 0x8000;
 constexpr auto INTERNAL_RAM_ECHO	=	0xC000	- 0x8000;
@@ -13,6 +13,20 @@ constexpr auto IO_PORT_END			=	0xff4c	- 0x8000;
 constexpr auto START_OF_INTERNAL_RAM=	0xFF80	- 0x8000;
 constexpr auto END_OF_INTERNAL_RAM	=	0xFFFE	- 0x8000;
 constexpr auto INTERRUPT_ENABLE		=	0xFFFF	- 0x8000;
+constexpr auto IO_LCDC = 0xFF40;
+constexpr auto IO_STAT = 0xFF41;
+constexpr auto IO_SCX = 0xFF42;
+constexpr auto IO_LY= 0xFF43;
+constexpr auto IO_LYC =  0xFF44;
+constexpr auto IO_DMA=   0xFF45;
+constexpr auto IO_BGP =  0xFF46;
+constexpr auto IO_SCY =  0xFF47;
+constexpr auto IO_OBP0 = 0xFF48;
+constexpr auto IO_OBP1 = 0xFF49;
+constexpr auto IO_WY =   0xFF4A;
+constexpr auto IO_WX =   0xFF4B;
+
+
 
 #include <stdint.h>
 

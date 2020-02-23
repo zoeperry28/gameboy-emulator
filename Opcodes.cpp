@@ -4,7 +4,11 @@
 #include <Windows.h>
 #include "MemoryLocations.h"
 #include "GraphicsInterpreter.h"
+#include <fstream>
 
+bool res;
+uint8_t GRAPHICS_FOUND[48];
+int inc2 = 0;
 Registers::CPUREG* R = new Registers::CPUREG;
 uint8_t n;
 int argc ;
@@ -15,6 +19,7 @@ unsigned int temp;
 static bool REGISTERS_INIT = false; 
 uint8_t lsb, msb;
 
+using namespace std;
 uint8_t GB_JP_nn(uint8_t nn)
 {
     temp = (nn & 0x0F);
@@ -148,6 +153,15 @@ void GB_XOR_n(uint8_t n)
     R->PC++;
 }
 
+void GB_LD_n_nn(uint8_t n)
+{
+    lsb = MEMORY_STATUS[R->PC + 1];
+    msb = MEMORY_STATUS[R->PC + 2];
+    n = lsb + msb;
+
+    std::cout << "SP = " << R->SP;
+    R->PC++;
+}
 
 
 // ------ ALU ------
@@ -227,16 +241,19 @@ void ex(int &argc, char** argv)
 void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
 {
     GB_INIT_STACK(); 
+    GB_INITIALIZE_REGS();
     R->PC = 0x0;
     R->SP = 0xFFFE;
-    draw(argc, argv);
+    //draw(argc, argv);
     while (1)
     {
         std::cout << "\nCURRENT PC ISSSSS ....... " << (uint32_t) R->PC;
         MEMORY_STATUS = MEMORY_MAP;
         GB_interpretOpcode(MEMORY_STATUS[R->PC]);
-       // Sleep(1000);
-        
+       
+        //DO A MEMORY DUMP 
+        std::ofstream outfile("MEMDUMP.bin", std::ofstream::binary);
+        outfile.write((char * ) MEMORY_MAP, 0x8000);
     }
 }
 
@@ -255,6 +272,25 @@ void GB_LDH_A_n(uint8_t n)
     R->PC++;
 }
 
+void GB_LDD_HL_A()
+{
+    std::cout << "HL = " << R->HL.PAIR; 
+    R->HL.PAIR = R->AF.A;
+    R->HL.PAIR--; 
+    R->PC++;
+}
+
+void GB_INC_n(uint8_t n)
+{
+    n++;
+    R->PC++;
+}
+
+void GB_DEC_n(uint8_t n)
+{
+    n--;
+    R->PC++;
+}
 /*
  * Theres not really an elegant way to do this... 
  */
@@ -274,7 +310,44 @@ void GB_interpretOpcode(uint8_t opcode)
 
         switch (opcode)
         {
+
+            //GB_DEC_n
+        case 0x3d: GB_DEC_n(R->AF.A);     break;
+        case 0x05: GB_DEC_n(R->BC.B);     break;
+        case 0x0d: GB_DEC_n(R->BC.C);     break;
+        case 0x15: GB_DEC_n(R->DE.D);     break;
+        case 0x1d: GB_DEC_n(R->DE.E);     break;
+        case 0x25: GB_DEC_n(R->HL.H);     break;
+        case 0x2d: GB_DEC_n(R->HL.L);     break;
+        case 0x35: GB_DEC_n(R->HL.PAIR);  break;
+
+
+        case 0x3C: GB_INC_n(R->AF.A);     break;
+        case 0x04: GB_INC_n(R->BC.B);     break;
+        case 0x0C: GB_INC_n(R->BC.C);     break;
+        case 0x14: GB_INC_n(R->DE.D);     break;
+        case 0x1c: GB_INC_n(R->DE.E);     break;
+        case 0x24: GB_INC_n(R->HL.H);     break;
+        case 0x2c: GB_INC_n(R->HL.L);     break;
+        case 0x34: GB_INC_n(R->HL.PAIR);  break;
         //8 BIT LOADS
+
+        case 0x22: 
+            R->HL.PAIR = R->AF.A;
+            R->HL.PAIR++;
+            R->PC++;
+            break;
+        
+        case 0x32: GB_LDD_HL_A(); break;
+
+        case 0xE2:
+            R->AF.PAIR = R->AF.A + R->AF.F;
+            temp = (0xff00 + (R->BC.C));
+            MEMORY_STATUS[temp] = R->AF.A;
+
+            printf("\nRES: %x", MEMORY_STATUS[temp]);
+            R->PC++;
+            break; 
 
         case 0xE0: MEMORY_STATUS[0xFF00 + GB_GET_n()] = R->AF.A; R->PC++;  break;
         // LD nn, n
@@ -333,7 +406,7 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0x64:GB_LD_r1_r2(R->HL.H, R->HL.H);    break;
         case 0x65:GB_LD_r1_r2(R->HL.H, R->HL.L);    break;
         case 0x66:GB_LD_r1_r2(R->HL.H, R->HL.PAIR); break;
-   
+
         case 0x68:GB_LD_r1_r2(R->HL.L, R->BC.B);    break;
         case 0x69:GB_LD_r1_r2(R->HL.L, R->BC.C);    break;
         case 0x6A:GB_LD_r1_r2(R->HL.L, R->DE.D);    break;
@@ -350,50 +423,96 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0x75:GB_LD_r1_r2(R->HL.PAIR, R->HL.L);    break;
         case 0x76:GB_LD_r1_r2(R->HL.PAIR, GB_GET_n()); break;
 
-         //LD A,n   
-        case 0x0a: GB_LD_A_n(R->BC.PAIR); break;
-        case 0x1a: GB_LD_A_n(R->DE.PAIR); break;
-        case 0x7e: GB_LD_A_n(R->HL.PAIR); break;
-        case 0xfa: GB_LD_A_n(R->DE.D); break;
+            //LD A,n   
+        case 0x1a: GB_LD_A_n(R->DE.PAIR); R->PC++;break;
+        case 0x7e: GB_LD_A_n(R->HL.PAIR); R->PC++;break;
+        case 0xfa: GB_LD_A_n(R->DE.D);    R->PC++;break;
+        case 0x0a: GB_LD_A_n(R->BC.PAIR); R->PC++;break;
         case 0x3e: GB_LD_A_n(GB_GET_nn()); break;
-            
 
-        //LD n,A
+
+            //LD n,A
         case 0x47: GB_LD_n_A(R->BC.B); break;
         case 0x4F: GB_LD_n_A(R->BC.C); break;
         case 0x57: GB_LD_n_A(R->DE.D); break;
         case 0x5f: GB_LD_n_A(R->DE.E); break;
         case 0x67: GB_LD_n_A(R->HL.H); break;
         case 0x6f: GB_LD_n_A(R->HL.L); break;
-        
+
         case 0x02: GB_LD_n_A(R->BC.PAIR); break;
         case 0x12: GB_LD_n_A(R->DE.PAIR); break;
         case 0x77: GB_LD_n_A(R->HL.PAIR); break;
         case 0xEA: GB_LD_n_A(GB_GET_nn()); break;
 
-        //LDH A, n
+            //LDH A, n
         case 0xF0:GB_LDH_A_n(GB_GET_n()); break;
-        // JUMPS
-        case 0xC3:GB_JP_nn(opcode); break;
+            // JUMPS
+        case 0xC3:
+        {
+            if (MEMORY_STATUS[R->PC + 1] == 0x50 && MEMORY_STATUS[R->PC + 2] == 0x01)
+            {
 
-        case 0xC2:GB_JMP_Condition_NN(R->FLAG.Z, 1); break; 
-        case 0xCA:GB_JMP_Condition_NN(R->FLAG.Z, 1); break; 
+                //uint8_t* GRAPHICS_FOUND;
+                //int inc;
+                for (int i = R->PC; i < (R->PC + 48); i++)
+                {
+                    GRAPHICS_FOUND[inc2] = MEMORY_STATUS[i + 2];
+                    inc2++;
+                }
+                bool res = check_logo((char*)GRAPHICS_FOUND, (char*)GRAPHICS_FOUND);
+
+                helper(MEMORY_STATUS, GRAPHICS_FOUND);
+
+                std::cout << "OUT: " << res;
+
+                std::cout << "STACK POINTER VALUE: " << R->SP;
+                /*
+                 * Need to interpret the array as graphics
+                */
+
+                exit(5);
+            }
+            else
+            {
+                GB_JP_nn(opcode); break;
+            }
+        }
+
+        case 0xC2:GB_JMP_Condition_NN(R->FLAG.Z, 1); break;
+        case 0xCA:GB_JMP_Condition_NN(R->FLAG.Z, 1); break;
         case 0xD2:GB_JMP_Condition_NN(R->FLAG.C, 0); break;
         case 0xDA:GB_JMP_Condition_NN(R->FLAG.C, 1); break;
 
-       // case 0xE9: R->PC = R->HL.PAIR; break;
+            // case 0xE9: R->PC = R->HL.PAIR; break;
         case 0xE9: R->PC++; break;
 
         case 0x18: // temp = R->PC; 
                    // temp =+ R->PC++; 
-                    R->PC += 2;
-                    break;
+            R->PC += 2;
+            break;
         case 0x20: GB_JMP_Condition(R->FLAG.Z, 1); break;
         case 0x28: GB_JMP_Condition(R->FLAG.Z, 1); break;
         case 0x30: GB_JMP_Condition(R->FLAG.C, 1); break;
         case 0x38: GB_JMP_Condition(R->FLAG.C, 0); break;
-        
+
+            //BIT OPCODES
+        case 0xCB:
+            R->PC++;
+            if (MEMORY_STATUS[(R->PC)] == 0x7c)
+            {
+                std::cout << "hello it me";
+                R->HL.H = 0x7;
+                //exit(666);
+            }
+            R->PC++;
+            break;
+
         //16 Bit Loads
+
+        case 0x01: GB_LD_n_nn(R->BC.PAIR); R->PC += 2;  break;
+        case 0x11: GB_LD_n_nn(R->DE.PAIR); R->PC += 2;  break;
+        case 0x21: GB_LD_n_nn(R->HL.PAIR); R->PC += 2; break;
+        case 0x31: GB_LD_n_nn(R->SP);      R->PC +=2;  break;
 
         case 0xF1: GB_POP_nn(R->AF.A, R->AF.F);break;
         case 0xC1: GB_POP_nn(R->BC.B, R->BC.C);break;
@@ -440,14 +559,14 @@ void GB_interpretOpcode(uint8_t opcode)
             //TF is #
 
         //SUB n
-        case 0x97: GB_SUB_n(R->AF.A); break;
-        case 0x90: GB_SUB_n(R->BC.B); break;
-        case 0x91: GB_SUB_n(R->BC.C); break;
-        case 0x92: GB_SUB_n(R->DE.D); break;
-        case 0x93: GB_SUB_n(R->DE.E); break;
-        case 0x94: GB_SUB_n(R->HL.H); break;
-        case 0x95: GB_SUB_n(R->HL.L); break;
-        case 0x96: GB_SUB_n(R->HL.PAIR); break;
+        case 0x97: GB_SUB_n(R->AF.A);    R->PC++;    break;
+        case 0x90: GB_SUB_n(R->BC.B);    R->PC++;    break;
+        case 0x91: GB_SUB_n(R->BC.C);    R->PC++;    break;
+        case 0x92: GB_SUB_n(R->DE.D);    R->PC++;    break;
+        case 0x93: GB_SUB_n(R->DE.E);    R->PC++;    break;
+        case 0x94: GB_SUB_n(R->HL.H);    R->PC++;    break;
+        case 0x95: GB_SUB_n(R->HL.L);    R->PC++;    break;
+        case 0x96: GB_SUB_n(R->HL.PAIR); R->PC++; break;
 
         //SBC A,n
         case 0x9f: GB_SBC_n(R->AF.A); R->PC++; break;
@@ -551,11 +670,11 @@ void GB_interpretOpcode(uint8_t opcode)
         case 0xFB: MEMORY_STATUS[0xFFFF] = 1; R->PC++;  break;
 
         case 0xCE:
-
-            std::cout << "\n";
-           
-            ex(argc, argv);
-            exit(22);
+            if (MEMORY_STATUS[R->PC + 1] == 0xED)
+            {
+                std::cout << " graphics timeeeeeee ";
+                exit(69);
+            }
             break;
         default: 
             printf("\n################# UNIMPLEMENTED OPCODE : %x #################", opcode);

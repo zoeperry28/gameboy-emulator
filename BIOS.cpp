@@ -21,7 +21,7 @@ int width, height;
 uint8_t logo_total = 0u;
 myTest MEMORY_DEF;
 
-bool BIOS_SET::check_logo(char * BIOS_ROM, char * GAME_ROM)
+bool check_logo(char * BIOS_ROM, char * GAME_ROM)
 {
     /*
         * Compare the rom on the bios with the logo data on the ACTUAL CARTRIDGE
@@ -29,13 +29,13 @@ bool BIOS_SET::check_logo(char * BIOS_ROM, char * GAME_ROM)
         */
 
    
-    if (BIOS_ROM[logo_data_BIOS] == GAME_ROM[logo_data_CART])
+    if (BIOS_ROM[0] == GAME_ROM[0])
     {
-        for (int i = 0; i < 29; i++)
+        for (int i = 0; i < sizeof(GAME_ROM); i++)
         {
-            if (BIOS_ROM[logo_data_BIOS + i] == GAME_ROM[logo_data_CART + i])
+            if (BIOS_ROM[i] == GAME_ROM[i])
             {
-                logo_total = GAME_ROM[logo_data_CART + i] + logo_total;
+                logo_total = GAME_ROM[i] + logo_total;
                 logo_status = true;
             }
             else
@@ -117,10 +117,10 @@ int main()
 {
     BIOS_SET _BIOS;
     int j = 0;
-    char*  rom_file = _BIOS.get_rom("C://Users//zoepe//Downloads//tetris.bin");
+    char*  rom_file = _BIOS.get_rom("C://Users//zoepe//Downloads//tetris.dump");
     char * bios_file = _BIOS.get_bios("C://Users//zoepe//Downloads//dmg_boot.bin");
     t.BIOS_GRAPHIC = bios_file;
-    bool x = _BIOS.check_logo(rom_file, t.BIOS_GRAPHIC);
+    bool x = check_logo(rom_file, t.BIOS_GRAPHIC);
     cout << "result: " << x ? "true" : "false";
     
     MEMORY_MAP = (uint8_t *) rom_file;

@@ -1,7 +1,10 @@
+#pragma once
+
 #ifndef __OPCODES_H__ 
 #define __OPCODES_H__
 
 #include <stdint.h>
+#include "BIOS.h"
 
 uint16_t GB_GET_nn();
 uint8_t GB_GET_n();

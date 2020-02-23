@@ -2,6 +2,8 @@
 #include <SDL2/SDL_render.h>
 #include <iostream>
 #include <vector>
+#include "MemoryLocations.h"
+#include "Registers.h"
 
 using namespace std;
 
@@ -16,6 +18,38 @@ static std::string LOGO_data[] = {
 "1100", "0110", "1101", "1001", "1011", "0011", "1110", "1100", "1100", "1111", "1001", "1110",
 };
 
+// CE ED 66 66 CC 0D 00 0B 03 73 00 83 00 0C 00 0D 00 08 11 
+// 1F 88 89 00 0E DC CC 6E E6 DD DD D9 99 BB BB 67 63 6E 0E 
+// EC CC DD DC 99 9F BB B9 33 3E
+
+void helper(uint8_t * MEMORY_STATUS, uint8_t DECODING [])
+{
+    uint8_t TILE_LOC = VIDEO_RAM;
+
+    for (int i = 0; i < sizeof(DECODING); i++)
+    {
+        /* Handle the blank tile */
+        
+
+        /* Decode the tile, then place it into SRAM - remember, theres a blank at 8000 for SOME REASON - 
+        * basically just deal with that. 
+        */
+        if (TILE_LOC > 0)
+        {
+            unsigned int DIG1 = ((DECODING[i] >> 4) & 0xFF);
+            unsigned int DIG2 = ((DECODING[i] ) & 0x0F);
+            printf("\nHEX: %x, DIG1 : %x, DIG2 : %x", DECODING[i], DIG1, DIG2);
+            std::string BIN1 = GBA_ConvertHextoBin(DIG1);
+            std::string BIN2 = GBA_ConvertHextoBin(DIG2);
+            std::cout << "\nRES1 : " << BIN1;
+            std::cout << "\nRES2 : " << BIN2;
+
+
+        }
+
+        TILE_LOC++;
+    }
+}
 
 int draw(int argc, char** argv)
 {
@@ -60,13 +94,23 @@ int draw(int argc, char** argv)
 
     SDL_Event event;
     bool running = true;
-
+    while (running)
+    {
         const Uint64 start = SDL_GetPerformanceCounter();
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
 
-    
+        while (SDL_PollEvent(&event))
+        {
+            if ((SDL_QUIT == event.type) ||
+                (SDL_KEYDOWN == event.type && SDL_SCANCODE_ESCAPE == event.key.keysym.scancode))
+            {
+                running = false;
+                break;
+            }
+        }
+
     std::string myBIN;
 
     SDL_Rect rect;
@@ -120,7 +164,7 @@ int draw(int argc, char** argv)
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
 
-
+    }
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

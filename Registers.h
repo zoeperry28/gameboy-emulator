@@ -43,7 +43,7 @@ class Registers
 			{
 				uint8_t A : 8;
 				uint8_t F : 8;
-				uint16_t PAIR : 16;
+				uint16_t PAIR = A + F;
 
 			} AF;
 
@@ -51,7 +51,7 @@ class Registers
 			{
 				uint8_t B : 8;
 				uint8_t C : 8;
-				uint16_t PAIR : 16;
+				uint16_t PAIR = B + C;
 
 			} BC;
 
@@ -59,7 +59,7 @@ class Registers
 			{
 				uint8_t D : 8;
 				uint8_t E : 8;
-				uint16_t PAIR : 16;
+				uint16_t PAIR = D + E;
 
 			} DE;
 
@@ -67,7 +67,7 @@ class Registers
 			{
 				uint8_t H : 8;
 				uint8_t L : 8;
-				uint16_t PAIR : 16;
+				uint16_t PAIR = H + L;
 
 			} HL;
 
