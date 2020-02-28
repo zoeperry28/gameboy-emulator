@@ -117,7 +117,7 @@ int main()
 {
     BIOS_SET _BIOS;
     int j = 0;
-    char*  rom_file = _BIOS.get_rom("C://Users//zoepe//Downloads//tetris.dump");
+    char*  rom_file = _BIOS.get_rom("C://Users//zoepe//Downloads//tetris.bin");
     char * bios_file = _BIOS.get_bios("C://Users//zoepe//Downloads//dmg_boot.bin");
     t.BIOS_GRAPHIC = bios_file;
     bool x = check_logo(rom_file, t.BIOS_GRAPHIC);

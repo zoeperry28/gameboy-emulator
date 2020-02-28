@@ -4,9 +4,13 @@
 #include <iostream>
 #include <memory>
 #include "MemoryLocations.h"
+#include <vector>
+
+using namespace std;
 
 int draw(int argc, char** argv);
-void helper(uint8_t * MEMORY_STATUS, uint8_t DECODING []);
+void helper(uint8_t * MEMORY_STATUS);
+void setGraphicsArray(vector<int> &example);
 class Application
 {
 public:

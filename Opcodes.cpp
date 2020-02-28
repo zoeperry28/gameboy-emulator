@@ -5,9 +5,9 @@
 #include "MemoryLocations.h"
 #include "GraphicsInterpreter.h"
 #include <fstream>
-
+#include <vector>
 bool res;
-uint8_t GRAPHICS_FOUND[48];
+
 int inc2 = 0;
 Registers::CPUREG* R = new Registers::CPUREG;
 uint8_t n;
@@ -449,19 +449,21 @@ void GB_interpretOpcode(uint8_t opcode)
             // JUMPS
         case 0xC3:
         {
+            vector<int> GRAPHICS_FOUND;
+
             if (MEMORY_STATUS[R->PC + 1] == 0x50 && MEMORY_STATUS[R->PC + 2] == 0x01)
             {
 
                 //uint8_t* GRAPHICS_FOUND;
                 //int inc;
-                for (int i = R->PC; i < (R->PC + 48); i++)
+                for (int i = R->PC+1; i < (R->PC + 50); i++)
                 {
-                    GRAPHICS_FOUND[inc2] = MEMORY_STATUS[i + 2];
+                    GRAPHICS_FOUND.push_back(MEMORY_STATUS[i + 2]);
                     inc2++;
                 }
-                bool res = check_logo((char*)GRAPHICS_FOUND, (char*)GRAPHICS_FOUND);
-
-                helper(MEMORY_STATUS, GRAPHICS_FOUND);
+                //bool res = check_logo((char*)GRAPHICS_FOUND, (char*)GRAPHICS_FOUND);
+                setGraphicsArray(GRAPHICS_FOUND);
+                helper(MEMORY_STATUS);
 
                 std::cout << "OUT: " << res;
 
@@ -470,7 +472,7 @@ void GB_interpretOpcode(uint8_t opcode)
                  * Need to interpret the array as graphics
                 */
 
-                exit(5);
+                
             }
             else
             {
