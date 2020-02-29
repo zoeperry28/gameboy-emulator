@@ -11,6 +11,8 @@ using namespace std;
 int draw(int argc, char** argv);
 void helper(uint8_t * MEMORY_STATUS);
 void setGraphicsArray(vector<int> &example);
+//void PutPixel16_nolock(SDL_Surface* surface, int x, int y, Uint32 color);
+void set_pixel(SDL_Surface* surface, int x, int y, Uint32 pixel);
 class Application
 {
 public:

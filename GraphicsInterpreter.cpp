@@ -4,6 +4,7 @@
 #include <vector>
 #include "MemoryLocations.h"
 #include "Registers.h"
+#include "GraphicsInterpreter.h"
 
 using namespace std;
 
@@ -124,121 +125,51 @@ void helper(uint8_t * MEMORY_STATUS)
 
 int draw(int argc, char** argv)
 {
-    SDL_Init(SDL_INIT_EVERYTHING);
-    atexit(SDL_Quit);
 
-    SDL_Window* window = SDL_CreateWindow
-    (
-        "SDL2",
-        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        600, 600,
-        SDL_WINDOW_SHOWN
-    );
-
-    SDL_Renderer* renderer = SDL_CreateRenderer
-    (
-        window,
-        -1,
-        SDL_RENDERER_ACCELERATED
-    );
-
-    SDL_RendererInfo info;
-    SDL_GetRendererInfo(renderer, &info);
-    cout << "Renderer name: " << info.name << endl;
-    cout << "Texture formats: " << endl;
-    for (Uint32 i = 0; i < info.num_texture_formats; i++)
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
-        cout << SDL_GetPixelFormatName(info.texture_formats[i]) << endl;
+        std::cout << "Failed to initialize the SDL2 library\n";
+        return -1;
     }
 
-    const unsigned int texWidth = 1024;
-    const unsigned int texHeight = 1024;
-    SDL_Texture* texture = SDL_CreateTexture
-    (
-        renderer,
-        SDL_PIXELFORMAT_ARGB8888,
-        SDL_TEXTUREACCESS_STREAMING,
-        texWidth, texHeight
-    );
+    SDL_Window* window = SDL_CreateWindow("SDL2 Window",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        200, 200,
+        0);
 
-    vector< unsigned char > pixels(texWidth * texHeight * 4, 0);
-
-    SDL_Event event;
-    bool running = true;
-    while (running)
+    if (!window)
     {
-        const Uint64 start = SDL_GetPerformanceCounter();
+        std::cout << "Failed to create window\n";
+        return -1;
+    }
 
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(renderer);
+    SDL_Surface* window_surface = SDL_GetWindowSurface(window);
 
-        while (SDL_PollEvent(&event))
+        
+    int y = 0;
+    for (int i = 0; i < 200; i++)
+    {
+        for (int j = 0; j < 50; j++)
         {
-            if ((SDL_QUIT == event.type) ||
-                (SDL_KEYDOWN == event.type && SDL_SCANCODE_ESCAPE == event.key.keysym.scancode))
-            {
-                running = false;
-                break;
-            }
+            set_pixel(window_surface, i, j, 0xFFFFFF);
         }
+    }
+    if (!window_surface)
+    {
+        std::cout << "Failed to get the surface from the window\n";
+        return -1;
+    }
 
-    std::string myBIN;
-
-    SDL_Rect rect;
+    SDL_UpdateWindowSurface(window);
     
-    rect.x = 0;
-    rect.y = 0;
-    rect.w = 5;
-    rect.h = 5;
-    int bitcnt = 0;
-
-    for (int i = 0; i < sizeof(LOGO_data); i++)
-    {
-        myBIN = LOGO_data[i];
-        for (int j = 0; j < myBIN.length(); j++)
-        {
-            if (myBIN.substr(j, j) == "1")
-            {
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            }
-            else if (myBIN.substr(j, j) == "0")
-            {
-                SDL_SetRenderDrawColor(renderer, 0,0, 0, 0);
-            }
-            
-            //SDL_RenderFillRect(m_window_renderer, &rect);
-            SDL_RenderDrawPoint(renderer, rect.x, rect.y); //Renders on middle of screen
-            bitcnt++;
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-            SDL_RenderPresent(renderer);
-
-            if (bitcnt % (12 *4 )== 1)
-            {
-                rect.x = 0;
-                rect.y++;
-            }
-            else
-            {
-                rect.x ++;
-            }
-        }
-    }
-
-        SDL_UpdateTexture
-        (
-            texture,
-            NULL,
-            &pixels[0],
-            texWidth * 4
-        );
-
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
-        SDL_RenderPresent(renderer);
-
-    }
-
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-    return 1;
+    
+    SDL_Delay(5000);
 }
+void set_pixel(SDL_Surface* surface, int x, int y, Uint32 pixel)
+{
+    Uint32* target_pixel = (Uint32*)surface->pixels + y * surface->pitch +
+        x * sizeof * target_pixel;
+    *target_pixel = pixel;
+}
+

@@ -117,7 +117,7 @@ int main()
 {
     BIOS_SET _BIOS;
     int j = 0;
-    char*  rom_file = _BIOS.get_rom("C://Users//zoepe//Downloads//tetris.bin");
+    char*  rom_file = _BIOS.get_rom("C://Users//zoepe//Documents//gameboy-emulator//tetris.dump");
     char * bios_file = _BIOS.get_bios("C://Users//zoepe//Downloads//dmg_boot.bin");
     t.BIOS_GRAPHIC = bios_file;
     bool x = check_logo(rom_file, t.BIOS_GRAPHIC);
@@ -127,13 +127,10 @@ int main()
     bool start = false; 
         
      
-    for (int i = 0; i < sizeof(t.ROM_EXE); i++)
+    for (int i = 0; i < (0x8000); i++)
     {
-        t.ROM_EXE[i] = MEMORY_MAP[i];
+        t.NONCART[i] = MEMORY_MAP[i];
     }
-    
-    
-
 
     while (1)
     {
@@ -144,7 +141,7 @@ int main()
         }
        else
         {
-            GB_retrieveOpcodes((uint8_t *) t.ROM_EXE);
+            GB_retrieveOpcodes((uint8_t *) t.NONCART);
             Sleep(5000);
             j++;
         }
