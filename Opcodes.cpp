@@ -23,15 +23,9 @@ static bool REGISTERS_INIT = false;
 uint8_t lsb, msb;
 
 using namespace std;
-uint8_t GB_JP_nn(uint8_t nn)
-{
-    temp = (nn & 0x0F);
-    R->PC = R->PC + temp;
-    return temp;
-}
 
 void GB_INITIALIZE_REGS()
-{   
+{
     R->AF.PAIR = 0x01;
     R->AF.F = 0xB0;
     R->BC.PAIR = 0x0013;
@@ -39,7 +33,17 @@ void GB_INITIALIZE_REGS()
     R->HL.PAIR = 0x014D;
     R->SP = 0xFFFE;
     R->PC = 0x100;
+
 }
+
+uint8_t GB_JP_nn(uint8_t nn)
+{
+    temp = (nn & 0x0F);
+    R->PC = R->PC + temp;
+    return temp;
+}
+
+
 void GB_JMP_Condition_NN(uint8_t FLAG, int SET_CHECK)
 {
     if (FLAG == SET_CHECK)
@@ -61,7 +65,7 @@ void GB_LD_r1_r2(std::string R1, uint8_t R2)
     R->PC++;
 }
 
-void GB_LD_A_n(uint8_t n)
+void GB_LD_A_n(uint16_t n)
 {
     R->AF.A = n; 
 }
@@ -206,17 +210,12 @@ void GB_CALL_nn()
     R->PC++;
     msb = MEMORY_STATUS[R->PC];
     R->PC++;
-    //writeMem(SP - 1, ((PC & 0xFF00) >> 8), gbcpu.mem);
 
-    //writeMem(SP - 2, (PC & 0xFF), gbcpu.mem);
+    GBA_Set_Stack_ITEM((R->SP - 2), (lsb & 0xFF));
+    GBA_Set_Stack_ITEM((R->SP - 1), (msb & 0xFF00 >> 8));
 
-    GBA_Set_Stack_ITEM((R->SP - 2), (MEMORY_STATUS[R->PC] & 0xFF));
-    GBA_Set_Stack_ITEM((R->SP - 1), (MEMORY_STATUS[R->PC] & 0xFF00 >> 8));
-
-    //SP -= 2;
     R->SP = R->SP - 2;
-    //PC = opAux.Word;
-    R->PC++;
+    R->PC = msb;
 
     //break;
 
@@ -272,34 +271,34 @@ void GB_RESOLVE_REG(std::string REGNAME, uint16_t value, std::string op)
     {
         if (op == "dec")
         {
-            R->AF.A =-value;
+            R->AF.A =-MEMORY_STATUS[value];
         }
         else if (op == "inc")
         {
-            R->AF.A =+value;
+            R->AF.A =+MEMORY_STATUS[value];
         }
         else if (op == "and")
         {
-            R->AF.A && value;
+            R->AF.A && MEMORY_STATUS[value];
         }
         else
         {
-            R->AF.A = value;
+            R->AF.A = MEMORY_STATUS[value];
         }
     }
     else if (REGNAME == "B")
     {
         if (op == "dec")
         {
-            R->BC.B =- value;
+            R->BC.B =-MEMORY_STATUS[value];
         }
         else if (op == "inc")
         {
-            R->BC.B =+ value;
+            R->BC.B =+MEMORY_STATUS[value];
         }
         else
         {
-            R->BC.B = value;
+            R->BC.B = MEMORY_STATUS[value];
         }
     }
 
@@ -307,15 +306,15 @@ void GB_RESOLVE_REG(std::string REGNAME, uint16_t value, std::string op)
     {
         if (op == "dec")
         {
-            R->BC.C =-value;
+            R->BC.C =-MEMORY_STATUS[value];
         }
         else if (op == "inc")
         {
-            R->BC.C =+value;
+            R->BC.C =+MEMORY_STATUS[value];
         }
         else
         {
-            R->BC.C = value;
+            R->BC.C = MEMORY_STATUS[value];
         }
     }
 
@@ -323,15 +322,15 @@ void GB_RESOLVE_REG(std::string REGNAME, uint16_t value, std::string op)
     {
         if (op == "dec")
         {
-            R->DE.D =-value;
+            R->DE.D =-MEMORY_STATUS[value];
         }
         else if (op == "inc")
         {
-            R->DE.D =+value;
+            R->DE.D =+MEMORY_STATUS[value];
         }
         else
         {
-            R->DE.D = value;
+            R->DE.D = MEMORY_STATUS[value];
         }
     }
 
@@ -339,65 +338,65 @@ void GB_RESOLVE_REG(std::string REGNAME, uint16_t value, std::string op)
     {
         if (op == "dec")
         {
-            R->DE.E=-value;
+            R->DE.E=-MEMORY_STATUS[value];
         }
         else if (op == "inc")
         {
-            R->DE.E=+value;
+            R->DE.E=+MEMORY_STATUS[value];
         }
         else
         {
-            R->DE.E = value;
+            R->DE.E = MEMORY_STATUS[value];
         }
     }
     else if (REGNAME == "H")
     {
         if (op == "dec")
         {
-            R->HL.H =-value;
+            R->HL.H =-MEMORY_STATUS[value];
         }
         else if (op == "inc")
         {
-            R->HL.H =+value;
+            R->HL.H =+MEMORY_STATUS[value];
         }
         else {
-            R->HL.H = value;
+            R->HL.H = MEMORY_STATUS[value];
         }
     }
     else if (REGNAME == "L")
     {
         if (op == "dec")
         {
-            R->HL.PAIR =-value;
+            R->HL.PAIR =-MEMORY_STATUS[value];
         }
         else if (op == "inc")
         {
-            R->HL.PAIR =+value;
+            R->HL.PAIR =+MEMORY_STATUS[value];
         }
         else {
-            R->HL.PAIR = value;
+            R->HL.PAIR = MEMORY_STATUS[value];
         }
     }
 
 
     else if (REGNAME == "BC") {
-        R->BC.PAIR = value;
+        R->BC.PAIR = MEMORY_STATUS[value];
     }
     else if (REGNAME == "DE") {
-        R->DE.PAIR = value;
+        R->DE.PAIR = MEMORY_STATUS[value];
     }
 
     else if (REGNAME == "HL") {
         if (op == "dec")
         {
-            R->HL.PAIR =- value;
+            R->HL.PAIR =-MEMORY_STATUS[value];
         }
         else if (op == "inc")
         {
-            R->HL.PAIR =+ value;
+            R->HL.PAIR =+MEMORY_STATUS[value];
         }
         else {
-            R->HL.PAIR = value;
+            R->HL.PAIR = MEMORY_STATUS[value];
         }
     }
 
@@ -405,6 +404,30 @@ void GB_RESOLVE_REG(std::string REGNAME, uint16_t value, std::string op)
         R->SP = value;
     }
 }
+
+
+uint8_t GB_AF_Form()
+{
+    R->AF.PAIR = ((R->AF.A) << 8) | (R->AF.F);
+    return R->AF.PAIR;
+}
+
+uint8_t GB_BC_Form()
+{
+    R->BC.PAIR = ((R->BC.B) << 8) | (R->BC.C);
+    return R->BC.PAIR;
+}
+uint8_t GB_DE_Form()
+{
+    R->DE.PAIR = ((R->DE.D) << 8) | (R->DE.E);
+    return R->DE.PAIR;
+}
+uint8_t GB_HL_Form()
+{
+    R->HL.PAIR = ((R->HL.H) << 8) | (R->HL.L);
+    return R->HL.PAIR;
+}
+
 void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
 {
     GB_INIT_STACK();
@@ -414,14 +437,23 @@ void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
     draw(argc, argv);
     while (1)
     {
+        //GB_AF_Form();
+        //GB_BC_Form();
+        //GB_DE_Form();
+        //GB_HL_Form();
+
         MEMORY_STATUS = MEMORY_MAP;
         GB_interpretOpcode(MEMORY_STATUS[R->PC]);
 
         //DO A MEMORY DUMP 
         std::ofstream outfile("MEMDUMP.bin", std::ofstream::binary);
-        outfile.write((char*)MEMORY_MAP, 0x8000);
+        outfile.write((char*)MEMORY_MAP, 0xffff);
+
+        printf("\n\n######## - OPCODE : %x -########", MEMORY_STATUS[R->PC]);
 
         printf("\nPC: %x, SP: %x, SPVAL : %x, STACKVAL: %x", R->PC, R->SP, MEMORY_STATUS[R->PC], MEMORY_STATUS[R->SP]);
+        printf("\nHL:%x , H:%x , L:%x", R->HL.PAIR, R->HL.H, R->HL.L);
+        printf("\nA:%x , AF: %x", R->AF.PAIR, R->AF.A);
 
     }
 }
@@ -621,10 +653,10 @@ void GB_interpretOpcode(uint8_t opcode)
         //case 0xDD: R->PC++;
             //16 Bit Loads
 
-        case 0x01: GB_LD_n_nn("BC"); R->PC += 2;  break;
-        case 0x11: GB_LD_n_nn("DE"); R->PC += 2;  break;
-        case 0x21: GB_LD_n_nn("HL"); R->PC += 2; break;
-        case 0x31: GB_LD_n_nn("SP"); R->PC += 2;  break;
+        case 0x01: GB_LD_n_nn("BC"); R->PC+=2; break;
+        case 0x11: GB_LD_n_nn("DE"); R->PC+=2; break;
+        case 0x21: GB_LD_n_nn("HL"); R->PC+=2; break;
+        case 0x31: GB_LD_n_nn("SP"); R->PC+=2; break;
                                  
         case 0xF1: GB_POP_nn("A", "F"); break;
         case 0xC1: GB_POP_nn("B", "C"); break;

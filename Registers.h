@@ -5,7 +5,7 @@
 
 std::string GBA_ConvertHextoBin(uint8_t hexa);
 void GB_interpretOpcode(uint8_t opcode); 
-uint8_t GBA_BinToHex(std::string binary);
+unsigned int GBA_BinToHex(std::string binary);
  
 class Registers
 {
@@ -41,51 +41,51 @@ class Registers
 
 			union
 			{
-				uint8_t A : 8;
-				uint8_t F : 8;
-				uint16_t PAIR = A + F;
+				unsigned int A : 16;
+				unsigned int F : 16;
+				uint16_t PAIR : 16;
 
 			} AF;
 
 			union
 			{
-				uint8_t B : 8;
-				uint8_t C : 8;
-				uint16_t PAIR = B + C;
+				unsigned int B : 16;
+				unsigned int C : 16;
+				uint16_t PAIR :16;
 
 			} BC;
 
 			union
 			{
-				uint8_t D : 8;
-				uint8_t E : 8;
-				uint16_t PAIR = D + E;
+				unsigned int D : 16;
+				unsigned int E : 16;
+				uint16_t PAIR :16;
 
 			} DE;
 
 			union
 			{
-				uint8_t H : 8;
-				uint8_t L : 8;
-				uint16_t PAIR = H + L;
+				unsigned int H : 16;
+				unsigned int L : 16;
+				uint16_t PAIR :16;
 
 			} HL;
 
 			union
 			{
-				uint8_t HASH; 
+				unsigned int HASH; 
 			} MISC;
 
 			union
 			{
-				uint8_t Z : 1;
-				uint8_t N : 1;
-				uint8_t H : 1;
-				uint8_t C : 1;
-				uint8_t F3 : 1;
-				uint8_t F2 : 1;
-				uint8_t F1 : 1;
-				uint8_t F0 : 1;
+				unsigned int Z : 1;
+				unsigned int N : 1;
+				unsigned int H : 1;
+				unsigned int C : 1;
+				unsigned int F3 : 1;
+				unsigned int F2 : 1;
+				unsigned int F1 : 1;
+				unsigned int F0 : 1;
 
 			} FLAG;
 		} CPUREG;

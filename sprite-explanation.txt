@@ -1,0 +1,20 @@
+1100 0110		##---##-
+1110 0110       ###--##-
+1110 0110       ###--##-
+1101 0110		##-#-##-
+
+1101 0110		##-#-##-		
+1100 1110		##--###-
+1100 1110		##--###-
+1100 0110		##---##-
+
+Look familiar? This is the decoded version of the two part 'N'
+sprite from the nintendo logo. 
+
+BOOT:0021 11 04 01         ld   de,0104	-- LOAD de with the sprite destination address	
+BOOT:0024 21 10 80         ld   hl,8010 -- AREA of VRAM to be copied to
+BOOT:0027 1A               ld   a,(de)	-- LOAD A with the value at destination address
+BOOT:0028 CD 95 00         call 0095	
+BOOT:002B CD 96 00         call 0096
+BOOT:002E 13               inc  de		-- NEXT ADDRESS CONTAINING SPRITE
+BOOT:002F 7B               ld   a,e
