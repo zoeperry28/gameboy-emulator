@@ -21,7 +21,6 @@ uint8_t* MEMORY_STATUS;
 unsigned int temp;
 static bool REGISTERS_INIT = false; 
 uint8_t lsb, msb;
-
 using namespace std;
 
 void GB_INITIALIZE_REGS()
@@ -167,8 +166,8 @@ void GB_LD_n_nn(std::string n)
     lsb = MEMORY_STATUS[R->PC + 1];
     msb = MEMORY_STATUS[R->PC + 2];
     nn = ((msb) << 8) | (lsb);
-
-    GB_RESOLVE_REG(n, nn, "NULL");
+    printf("TEST : %x, %x", lsb, msb);
+    GB_RESOLVE_REG("SP", nn, "NULL");
 
     R->PC++;
 }
@@ -261,7 +260,6 @@ void GB_CALL_cc_nn(uint8_t FLAG, int SET_CHECK)
         MEMORY_STATUS[R->SP] = GB_GET_n();
     }
     R->PC+=3;
-
 
 }
 
@@ -404,7 +402,6 @@ void GB_RESOLVE_REG(std::string REGNAME, uint16_t value, std::string op)
         R->SP = value;
     }
 }
-
 
 uint8_t GB_AF_Form()
 {
