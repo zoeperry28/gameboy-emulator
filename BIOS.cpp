@@ -57,6 +57,7 @@ bool check_logo(char * BIOS_ROM, char * GAME_ROM)
       
 char * BIOS_SET::get_bios(string BIOSNAME)
 {
+    
     std::ifstream data(BIOSNAME, std::ios::binary | std::ios::ate);
     data >> std::noskipws;
 
@@ -115,11 +116,15 @@ char * BIOS_SET::get_rom(string ROMNAME)
 
 int main() 
 {
+    GB_INIT_STACK(); 
     BIOS_SET _BIOS;
+    
     int j = 0;
     char*  rom_file = _BIOS.get_rom("C://Users//zoepe//Downloads//dmg_boot.bin");
     char * bios_file = _BIOS.get_bios("C://Users//zoepe//Downloads//dmg_boot.bin");
+
     t.BIOS_GRAPHIC = bios_file;
+   
     bool x = check_logo(rom_file, t.BIOS_GRAPHIC);
     cout << "result: " << x ? "true" : "false";
     
@@ -127,7 +132,7 @@ int main()
     bool start = false; 
         
      
-    for (int i = 0; i < (0x8000); i++)
+    for (int i = 0; i < (sizeof(t.NONCART)); i++)
     {
         t.NONCART[i] = MEMORY_MAP[i];
     }

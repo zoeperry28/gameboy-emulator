@@ -3,6 +3,7 @@
 #ifndef _MEMORYLOCATIONS_H_ 
 #define _MEMORYLOCATIONS_H_
 
+
 constexpr auto VIDEO_RAM			= 0x8000	- 0x8000;
 constexpr auto SWITCH_RAM_BNK		=	0xA000	- 0x8000;
 constexpr auto INTERNAL_RAM			=	0xC000	- 0x8000;
@@ -29,6 +30,9 @@ constexpr auto IO_WX =   0xFF4B;
 
 
 #include <stdint.h>
+
+
+static uint8_t GBA_STACK[END_OF_INTERNAL_RAM - START_OF_INTERNAL_RAM];
 
 void GB_INIT_STACK(); 
 uint8_t* GBA_Get_Stack();
@@ -67,9 +71,9 @@ struct myTest {
 	uint8_t COMPLEMENT_C : 1; //014D
 	uint8_t CHECKSUM : 1;
 
-	uint8_t ROM_EXE[8000];
+	uint8_t ROM_EXE[8000] = { 0 } ;
 
-	uint8_t NONCART[0xffff];
+	uint8_t NONCART[0xffff] = { 0 };
 };
 
 #endif

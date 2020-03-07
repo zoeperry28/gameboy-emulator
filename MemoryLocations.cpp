@@ -1,9 +1,8 @@
 #include "MemoryLocations.h"
 #include <cstdint>
-#include <iostream>
 
 myTest INITIAL_VALUES;
-uint8_t GBA_STACK[END_OF_INTERNAL_RAM - START_OF_INTERNAL_RAM];
+
 int inc = 0;
 
 void GB_INIT_STACK()
@@ -18,9 +17,7 @@ void GB_INIT_STACK()
 		GBA_STACK[i] = 0x0u;
 	}
 
-
 	GBA_Set_Stack();
-
 }
 
 uint8_t * GBA_Get_Stack()
@@ -33,10 +30,9 @@ uint8_t* GBA_Set_Stack()
 	for (int i = START_OF_INTERNAL_RAM; i < END_OF_INTERNAL_RAM; i++)
 	{
 		GBA_STACK[inc] = INITIAL_VALUES.NONCART[i];
-		std::cout << GBA_STACK[i];
 		inc++;
 	}
-	
+
 	return GBA_STACK;
 }
 

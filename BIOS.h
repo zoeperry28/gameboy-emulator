@@ -6,7 +6,7 @@
 #include <string>
 #include "MemoryLocations.h"
 
-static uint8_t * MEMORY_MAP ; 
+static uint8_t* MEMORY_MAP = { 0 };
 static myTest t;
 bool check_logo(char* BIOS_ROM, char* GAME_ROM);
 
