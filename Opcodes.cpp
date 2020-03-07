@@ -26,13 +26,7 @@ using namespace std;
 
 void GB_INITIALIZE_REGS()
 {
-    R->AF.PAIR = 0x01;
-    R->AF.F = 0xB0;
-    R->BC.PAIR = 0x0013;
-    R->DE.PAIR = 0x00D8;
-    R->HL.PAIR = 0x014D;
-    R->SP = 0xFFFE;
-    R->PC = 0x100;
+
 
 }
 
@@ -66,9 +60,9 @@ void GB_LD_r1_r2(std::string R1, uint8_t R2)
     R->PC++;
 }
 
-void GB_LD_A_n(uint8_t n)
+void GB_LD_A_n(uint16_t n)
 {
-    R->AF.A = n; 
+    R->AF.A = R->DE.PAIR; 
     R->HL.PAIR--; 
     R->PC++;
 }
@@ -170,7 +164,10 @@ void GB_LD_n_nn(std::string n)
     lsb = MEMORY_STATUS[R->PC + 1];
     msb = MEMORY_STATUS[R->PC + 2];
     nn = ((msb) << 8) | (lsb);
-    printf("TEST : %x, %x, %x", lsb, msb, nn);
+    if (nn == 0x104)
+    {
+        printf("TEST : %x, %x, %x", lsb, msb, nn);
+    }
     GB_RESOLVE_REG(n, nn, "NULL");
 
     R->PC++;
@@ -434,8 +431,14 @@ uint8_t GB_HL_Form()
 
 void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
 {
-    GB_INIT_STACK();
-    GB_INITIALIZE_REGS();
+    GB_INIT_STACK();   
+    R->AF.PAIR = 0x01;
+    R->AF.F = 0xB0;
+    R->BC.PAIR = 0x0013;
+    R->DE.PAIR = 0x00D8;
+    R->HL.PAIR = 0x014D;
+    R->SP = 0xFFFE;
+    R->PC = 0x100;
     R->PC = 0x0;
     R->SP = 0xFFFE;
     draw(argc, argv);
@@ -514,7 +517,11 @@ void GB_interpretOpcode(uint8_t opcode)
                 R->PC++;
                 break;
 
-            case 0xE0: MEMORY_STATUS[0xFF00 + GB_GET_n()] = R->AF.A; R->PC++;  break;
+            case 0xE0: 
+                temp = MEMORY_STATUS[R->PC + 1]; 
+                MEMORY_STATUS[0xFF00 + temp] = R->AF.A;  
+                R->PC+=2;  
+                break;
                 // LD nn, n
             case 0x06:GB_LD_nn_n("B"); break;
             case 0x0E:GB_LD_nn_n("C"); break;
