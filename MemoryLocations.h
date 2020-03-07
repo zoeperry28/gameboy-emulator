@@ -35,10 +35,6 @@ constexpr auto IO_WX =   0xFF4B;
 static uint8_t GBA_STACK[END_OF_INTERNAL_RAM - START_OF_INTERNAL_RAM];
 
 void GB_INIT_STACK(); 
-uint8_t* GBA_Get_Stack();
-uint8_t* GBA_Set_Stack();
-uint8_t GBA_Get_Stack_ITEM(int loc);
-void GBA_Set_Stack_ITEM(int value, int loc);
 
 struct myTest {
 

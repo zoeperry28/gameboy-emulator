@@ -21,7 +21,7 @@ uint8_t* MEMORY_STATUS;
 unsigned int temp;
 static bool REGISTERS_INIT = false; 
 uint8_t lsb, msb;
-
+std::string TESTER_BIT; 
 using namespace std;
 
 void GB_INITIALIZE_REGS()
@@ -51,11 +51,13 @@ void GB_JMP_Condition_NN(uint8_t FLAG, int SET_CHECK)
     }
 }
 
-void GB_LD_nn_n(uint8_t LD_nn)
+void GB_LD_nn_n(std::string LD_nn)
 {
-    R->PC++;
-    MEMORY_STATUS[R->PC] = LD_nn;
-    R->PC++;
+   
+    GB_RESOLVE_REG(LD_nn, MEMORY_STATUS[R->PC + 1], "NULL");
+    printf("\n C VALUE AFTER LD nn n : %x, FOUND : %x",R->BC.C, MEMORY_STATUS[R->PC + 1]);
+    R->PC+=2;
+
 }
 
 void GB_LD_r1_r2(std::string R1, uint8_t R2)
@@ -64,9 +66,11 @@ void GB_LD_r1_r2(std::string R1, uint8_t R2)
     R->PC++;
 }
 
-void GB_LD_A_n(uint16_t n)
+void GB_LD_A_n(uint8_t n)
 {
     R->AF.A = n; 
+    R->HL.PAIR--; 
+    R->PC++;
 }
 
 void GB_LD_n_A(std::string n)
@@ -106,7 +110,7 @@ uint16_t GB_GET_NN_ALT()
 }
 
 uint8_t GB_GET_n()
-{   
+{    
     n = MEMORY_STATUS[R->PC++];
     return n;
 }
@@ -166,8 +170,8 @@ void GB_LD_n_nn(std::string n)
     lsb = MEMORY_STATUS[R->PC + 1];
     msb = MEMORY_STATUS[R->PC + 2];
     nn = ((msb) << 8) | (lsb);
-    printf("TEST : %x, %x", lsb, msb);
-    GB_RESOLVE_REG("SP", nn, "NULL");
+    printf("TEST : %x, %x, %x", lsb, msb, nn);
+    GB_RESOLVE_REG(n, nn, "NULL");
 
     R->PC++;
 }
@@ -176,6 +180,7 @@ void GB_RST_n(uint8_t n)
 {
     MEMORY_STATUS[R->SP - 1] = (((R->PC & 0xFF00) >> 8));
     MEMORY_STATUS[R->SP - 2] = ((R->PC & 0xFF));
+    
     R->SP = R->SP -= 2;
     R->PC+=2;   
 }
@@ -237,8 +242,10 @@ void GB_LDH_A_n(uint8_t n)
 
 void GB_LDD_HL_A()
 {
-    R->HL.PAIR = R->AF.A;
-    R->HL.PAIR--; 
+    printf("\nHL: %x, A: %x", R->HL.PAIR, R->AF.A);
+    // R->HL.PAIR = R->AF.A; 
+    MEMORY_STATUS[R->HL.PAIR] = R->AF.A;
+    R->HL.PAIR--;
     R->PC++;
 }
 
@@ -269,34 +276,34 @@ void GB_RESOLVE_REG(std::string REGNAME, uint16_t value, std::string op)
     {
         if (op == "dec")
         {
-            R->AF.A =-MEMORY_STATUS[value];
+            R->AF.A--;
         }
         else if (op == "inc")
         {
-            R->AF.A =+MEMORY_STATUS[value];
+            R->AF.A++;
         }
         else if (op == "and")
         {
-            R->AF.A && MEMORY_STATUS[value];
+            R->AF.A && value;
         }
         else
         {
-            R->AF.A = MEMORY_STATUS[value];
+            R->AF.A =value;
         }
     }
     else if (REGNAME == "B")
     {
         if (op == "dec")
         {
-            R->BC.B =-MEMORY_STATUS[value];
+            R->BC.B--;
         }
         else if (op == "inc")
         {
-            R->BC.B =+MEMORY_STATUS[value];
+            R->BC.B++;
         }
         else
         {
-            R->BC.B = MEMORY_STATUS[value];
+            R->BC.B = value;
         }
     }
 
@@ -304,15 +311,15 @@ void GB_RESOLVE_REG(std::string REGNAME, uint16_t value, std::string op)
     {
         if (op == "dec")
         {
-            R->BC.C =-MEMORY_STATUS[value];
+            R->BC.C--;
         }
         else if (op == "inc")
         {
-            R->BC.C =+MEMORY_STATUS[value];
+            R->BC.C++;
         }
         else
         {
-            R->BC.C = MEMORY_STATUS[value];
+            R->BC.C = value;
         }
     }
 
@@ -320,15 +327,15 @@ void GB_RESOLVE_REG(std::string REGNAME, uint16_t value, std::string op)
     {
         if (op == "dec")
         {
-            R->DE.D =-MEMORY_STATUS[value];
+            R->DE.D--;
         }
         else if (op == "inc")
         {
-            R->DE.D =+MEMORY_STATUS[value];
+            R->DE.D++;
         }
         else
         {
-            R->DE.D = MEMORY_STATUS[value];
+            R->DE.D = value;
         }
     }
 
@@ -336,65 +343,65 @@ void GB_RESOLVE_REG(std::string REGNAME, uint16_t value, std::string op)
     {
         if (op == "dec")
         {
-            R->DE.E=-MEMORY_STATUS[value];
+            R->DE.E--;
         }
         else if (op == "inc")
         {
-            R->DE.E=+MEMORY_STATUS[value];
+            R->DE.E++;
         }
         else
         {
-            R->DE.E = MEMORY_STATUS[value];
+            R->DE.E = value;
         }
     }
     else if (REGNAME == "H")
     {
         if (op == "dec")
         {
-            R->HL.H =-MEMORY_STATUS[value];
+            R->HL.H--;
         }
         else if (op == "inc")
         {
-            R->HL.H =+MEMORY_STATUS[value];
+            R->HL.H++;
         }
         else {
-            R->HL.H = MEMORY_STATUS[value];
+            R->HL.H = value;
         }
     }
     else if (REGNAME == "L")
     {
         if (op == "dec")
         {
-            R->HL.PAIR =-MEMORY_STATUS[value];
+            R->HL.L--;
         }
         else if (op == "inc")
         {
-            R->HL.PAIR =+MEMORY_STATUS[value];
+            R->HL.L++;
         }
         else {
-            R->HL.PAIR = MEMORY_STATUS[value];
+            R->HL.L = value;
         }
     }
 
 
     else if (REGNAME == "BC") {
-        R->BC.PAIR = MEMORY_STATUS[value];
+        R->BC.PAIR = value;
     }
     else if (REGNAME == "DE") {
-        R->DE.PAIR = MEMORY_STATUS[value];
+        R->DE.PAIR = value;
     }
 
     else if (REGNAME == "HL") {
         if (op == "dec")
         {
-            R->HL.PAIR =-MEMORY_STATUS[value];
+            R->HL.PAIR--;
         }
         else if (op == "inc")
         {
-            R->HL.PAIR =+MEMORY_STATUS[value];
+            R->HL.PAIR++;
         }
         else {
-            R->HL.PAIR = MEMORY_STATUS[value];
+            R->HL.PAIR = value;
         }
     }
 
@@ -447,7 +454,10 @@ void GB_retrieveOpcodes(uint8_t* MEMORY_MAP)
 
         printf("\nPC: %x, SP: %x, SPVAL : %x, STACKVAL: %x", R->PC, R->SP, MEMORY_STATUS[R->PC], MEMORY_STATUS[R->SP]);
         printf("\nHL:%x , H:%x , L:%x", R->HL.PAIR, R->HL.H, R->HL.L);
-        printf("\nA:%x , AF: %x", R->AF.PAIR, R->AF.A);
+        printf("\nAF:%x , A: %x, F: %x", R->AF.PAIR, R->AF.A, R->AF.F);
+        printf("\nBC:%x , B: %x, C: %x", R->BC.PAIR, R->BC.B, R->BC.C);
+        printf("\nDE:%x , D: %x, E: %x", R->DE.PAIR, R->DE.D, R->DE.E);
+        printf("\nHL:%x , H: %x, L: %x", R->HL.PAIR, R->HL.H, R->HL.L);
     }
 }
 
@@ -499,7 +509,6 @@ void GB_interpretOpcode(uint8_t opcode)
             case 0x32: GB_LDD_HL_A(); break;
 
             case 0xE2:
-                R->AF.PAIR = R->AF.A + R->AF.F;
                 temp = (0xff00 + (R->BC.C));
                 MEMORY_STATUS[temp] = R->AF.A;
                 R->PC++;
@@ -507,12 +516,12 @@ void GB_interpretOpcode(uint8_t opcode)
 
             case 0xE0: MEMORY_STATUS[0xFF00 + GB_GET_n()] = R->AF.A; R->PC++;  break;
                 // LD nn, n
-            case 0x06:GB_LD_nn_n(R->BC.B); break;
-            case 0x0E:GB_LD_nn_n(R->BC.C); break;
-            case 0x16:GB_LD_nn_n(R->DE.D); break;
-            case 0x1E:GB_LD_nn_n(R->DE.E); break;
-            case 0x26:GB_LD_nn_n(R->HL.H); break;
-            case 0x2E:GB_LD_nn_n(R->HL.L); break;
+            case 0x06:GB_LD_nn_n("B"); break;
+            case 0x0E:GB_LD_nn_n("C"); break;
+            case 0x16:GB_LD_nn_n("D"); break;
+            case 0x1E:GB_LD_nn_n("E"); break;
+            case 0x26:GB_LD_nn_n("H"); break;
+            case 0x2E:GB_LD_nn_n("L"); break;
 
                 //LD r1, r2
             case 0x7F:GB_LD_r1_r2("A", R->AF.A); break;
@@ -580,11 +589,11 @@ void GB_interpretOpcode(uint8_t opcode)
             case 0x76:GB_LD_r1_r2("HL", GB_GET_n()); break;
 
                 //LD A,n   
-            case 0x1a: GB_LD_A_n(R->DE.PAIR); R->PC++; break;
-            case 0x7e: GB_LD_A_n(R->HL.PAIR); R->PC++; break;
-            case 0xfa: GB_LD_A_n(R->DE.D);    R->PC++; break;
-            case 0x0a: GB_LD_A_n(R->BC.PAIR); R->PC++; break;
-            case 0x3e: GB_LD_A_n(GB_GET_nn()); break;
+            case 0x1a: GB_LD_A_n(R->DE.PAIR); break;
+            case 0x7e: GB_LD_A_n(R->HL.PAIR); break;
+            case 0xfa: GB_LD_A_n(R->DE.D);    break;
+            case 0x0a: GB_LD_A_n(R->BC.PAIR); break;
+            case 0x3e: GB_LD_A_n(MEMORY_STATUS[R->PC + 1]); R->PC++; break;
 
             case 0x08: R->SP = GB_GET_NN_ALT(); R->PC++; break;
 
@@ -619,29 +628,60 @@ void GB_interpretOpcode(uint8_t opcode)
                        // temp =+ R->PC++; 
                 R->PC += 2;
                 break;
-            case 0x20: GB_JMP_Condition(R->FLAG.Z, 1); break;
+            case 0x20:
+
+                printf("\nPC %x", R->PC);
+                a = R->PC;
+                R->PC += 2;
+                if (R->FLAG.Z == 0)
+                {
+                    R->PC = R->PC + (int8_t)MEMORY_STATUS[a+1];
+                    printf("\nPC %x", R->PC);
+                }
+                
+                printf("\nPC %x", R->PC);
+                break;
+
             case 0x28: GB_JMP_Condition(R->FLAG.Z, 1); break;
             case 0x30: GB_JMP_Condition(R->FLAG.C, 1); break;
             case 0x38: GB_JMP_Condition(R->FLAG.C, 0); break;
 
-            case 0xC4: GB_CALL_cc_nn(R->FLAG.Z, 1); break;
-            case 0xCc: GB_CALL_cc_nn(R->FLAG.Z, 0); break;
-            case 0xD4: GB_CALL_cc_nn(R->FLAG.C, 1); break;
-            case 0xDC: GB_CALL_cc_nn(R->FLAG.C, 1); break;
+            case 0xC4: GB_CALL_cc_nn(R->FLAG.Z, 1); R->PC+=2; break;
+            case 0xCc: GB_CALL_cc_nn(R->FLAG.Z, 0); R->PC+=2; break;
+            case 0xD4: GB_CALL_cc_nn(R->FLAG.C, 1); R->PC+=2; break;
+            case 0xDC: GB_CALL_cc_nn(R->FLAG.C, 1); R->PC+=2; break;
 
 
                 //BIT OPCODES
+            /*
+             * this instruction tests bit "b" in register "r" and sets the Z (zero) flag accordingly. 
+             * For example, if the bit 2 in register B contains a 0, at execution of BIT 2, B the Z flag in 
+             * the F register contains 1 and bit 2 in register B remains 0.
+             * 
+             * In this case, we are checking bit 7 of the H register. If it is zero (unset), then we need 
+             * to set the Zero (Z) flag. If it is one (set), then we need to clear the Zero (Z) flag.
+            */
             case 0xCB:
-                R->PC++;
-                if (MEMORY_STATUS[(R->PC)] == 0x7c)
+                
+                a = (R->HL.PAIR & 0xFF00);
+                a = a >> 8;
+                TESTER_BIT = GBA_ConvertHextoBin(a);
+                std::cout << TESTER_BIT << endl;
+
+                TESTER_BIT = TESTER_BIT.at(0);
+                if (TESTER_BIT == "0")
                 {
-                    R->HL.H = 0x7;
-                    //exit(666);
+                    R->FLAG.Z = 1;
+
+                }
+                else if (TESTER_BIT == "1")
+                {
+                    R->FLAG.Z = 0;
                 }
                 R->PC++;
                 break;
-            //case 0xDD: R->PC++;
-                //16 Bit Loads
+
+            //16 Bit Loads
 
             case 0x01: GB_LD_n_nn("BC"); R->PC+=2; break;
             case 0x11: GB_LD_n_nn("DE"); R->PC+=2; break;
